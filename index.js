@@ -1,3 +1,3 @@
-import useXSWR from "./src/use-xswr"
+import useXS from "./src/use-xswr"
 
-export default useXSWR
+export {useXS}

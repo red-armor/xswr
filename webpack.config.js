@@ -1,40 +1,42 @@
 // eslint-disable-next-line @typescript-eslint/no-var-requires
-const HtmlWebpackPlugin = require('html-webpack-plugin');
+const HtmlWebpackPlugin = require("html-webpack-plugin")
 
-const { DIR, EXT = 'ts' } = process.env;
+const {DIR, EXT = "ts"} = process.env
 
 module.exports = {
-  mode: 'development',
+  mode: "development",
   entry: `./examples/${DIR}/index.${EXT}`,
   plugins: [
     new HtmlWebpackPlugin({
-      template: `./examples/${DIR}/public/index.html`,
-    }),
+      template: `./examples/${DIR}/public/index.html`
+    })
   ],
   module: {
-    rules: [{
-      test: /\.jsx?/,
-      use: [{
-        loader: 'babel-loader',
-        options: {
-          presets: [
-            '@babel/preset-env',
-            '@babel/preset-react',
-          ],
-        },
-      }],
-    }, {
-      test: /\.tsx?/,
-      loader: 'ts-loader',
-    }],
+    rules: [
+      {
+        test: /\.jsx?/,
+        use: [
+          {
+            loader: "babel-loader",
+            options: {
+              presets: ["@babel/preset-env", "@babel/preset-react"]
+            }
+          }
+        ]
+      },
+      {
+        test: /\.tsx?/,
+        loader: "ts-loader"
+      }
+    ]
   },
   resolve: {
-    extensions: ['.js', '.jsx', '.ts', '.tsx'],
+    extensions: [".js", ".jsx", ".ts", ".tsx"],
     alias: {
-      relinx: __dirname,
-    },
+      xswr: __dirname
+    }
   },
   devServer: {
-    port: process.env.PORT || '8080',
-  },
-};
+    port: process.env.PORT || "8080"
+  }
+}
