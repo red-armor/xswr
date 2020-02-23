@@ -1,10 +1,10 @@
-import {useEffect, useCallback} from "react"
+import {useEffect, useCallback, useState, useRef} from "react"
 import store from "./store"
 import Base from "./Base"
 
 export default (...args) => {
   const key = args[0]
-  const fetchArgs = key
+  const fetchArgs = [].concat(key)
   const fetch = args[1]
   const config = args[2] | {}
 
@@ -19,17 +19,20 @@ export default (...args) => {
   }, [stateFetcher.getProp("finalized")])
 
   const resultRef = useRef(
-    Object.defineProperties({
-      data: {
-        get: function() {
-          const currentBase = store.currentBase
-          if (currentBase !== base) {
-            base.current.addDeps(currentBase)
+    Object.defineProperties(
+      {},
+      {
+        data: {
+          get() {
+            const {currentBase} = store
+            if (currentBase && currentBase !== base) {
+              base.current.addDeps(currentBase)
+            }
+            return stateFetcher.getData()
           }
-          return stateFetcher.getProp("data")
         }
       }
-    })
+    )
   )
 
   return resultRef.current
