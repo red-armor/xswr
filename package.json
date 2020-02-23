@@ -1,0 +1,18 @@
+{
+  "name": "xswr",
+  "version": "0.0.1",
+  "description": "cross platform swr",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "swr",
+    "cross-platform",
+    "React",
+    "request",
+    "cache"
+  ],
+  "author": "",
+  "license": "ISC"
+}
