@@ -20,15 +20,19 @@ proto.setProp = function(prop, value) {
 proto.addSubscription = function(subscriber) {
   const state = this[STATE]
   state.subscribers.push(subscriber)
+  if (this.getProp("finalized")) return
+
+  // run fetch immediately
+  this.validate()
   subscriber.addRemover(() => {
-    const index = state.indexOf(subscriber)
-    if (index !== -1) state.splice(index, 1)
+    const index = state.subscribers.indexOf(subscriber)
+    if (index !== -1) state.subscribers.splice(index, 1)
   })
 }
 
 proto.update = function() {
   const state = this[STATE]
-  state.subscribers.forEach(subscriber => subscriber.update())
+  state.subscribers.forEach(subscriber => subscriber.triggerUpdate())
 }
 
 proto.validate = function() {
@@ -50,16 +54,17 @@ proto.validate = function() {
 
 proto.getData = function(prop) {
   const state = this[STATE]
-  const {data, fetch, isRevoked, fetchArgs, retryStrategy} = state
+  const {data, isRevoked, retryStrategy} = state
 
   // 如果说已经触发过，并且没有报错的话直接返回结果
-  if (isRevoked) {
-    if (!hasError) return data
-    else retryStrategy.run()
-    return
-  }
+  // if (isRevoked) {
+  //   if (!hasError) return data
+  //   else retryStrategy.run()
+  //   return
+  // }
 
   this.setProp("isRevoked", true)
+  return this.getProp("data")
 }
 
 export default ({key, fetch, fetchArgs}) => {
@@ -80,7 +85,7 @@ export default ({key, fetch, fetchArgs}) => {
     isRevoked: false,
     finalized: false,
 
-    promise: new Promise(),
+    promise: null,
 
     onFetching: false,
     hasError: false,
