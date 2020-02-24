@@ -2,20 +2,16 @@
 // return a promise
 import PromiseSubscriber from "./PromiseSubscriber"
 import store from "./store"
+import resolveArgs from "./resolveArgs"
 
 export default (...args) => {
-  const key = args[0]
-  const fetchArgs = [].concat(key)
-  const fetch = args[1]
-  const config = args[2] | {}
-
-  const stateFetcher = store.getFetcher({key, fetch, fetchArgs})
-  console.log("state ", stateFetcher)
+  const {config, key, fetchArgs, fetch} = resolveArgs(args)
+  const stateFetcher = store.getFetcher({key, fetchArgs, fetch})
   const subscriber = new PromiseSubscriber({
-    fetcher: stateFetcher
+    fetcher: stateFetcher,
+    config
   })
-
-  // stateFetcher.addPromiseSubscriber(subscriber)
+  console.log("state ", stateFetcher, subscriber)
 
   return subscriber.promise
 }

@@ -1,17 +1,20 @@
 import {useEffect, useCallback, useState, useRef} from "react"
 import store from "./store"
 import Base from "./Base"
+import resolveArgs from "./resolveArgs"
 
 export default (...args) => {
-  const key = args[0]
-  const fetchArgs = [].concat(key)
-  const fetch = args[1]
-  const config = args[2] | {}
-
-  const stateFetcher = store.getFetcher({key, fetch, fetchArgs})
+  const {config, key, fetchArgs, fetch} = resolveArgs(args)
+  const stateFetcher = store.getFetcher({key, fetchArgs, fetch})
   const [, setState] = useState(0)
   const update = useCallback(() => setState(Date.now()), [])
-  const base = useRef(new Base({update, fetcher: stateFetcher}))
+  const base = useRef(
+    new Base({
+      update,
+      config,
+      fetcher: stateFetcher
+    })
+  )
 
   useEffect(() => {
     stateFetcher.addSubscriber(base.current)

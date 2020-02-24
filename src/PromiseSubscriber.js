@@ -1,7 +1,7 @@
 import {thenDescriptor, catchDescriptor, finallyDescriptor} from "./commons"
 
 export default class PromiseSubscriber {
-  constructor({poolInterval = 0, fetcher}) {
+  constructor({config, fetcher}) {
     this.rejecter = () => {}
     this.resolver = () => {}
     this.promise = Promise.resolve()
@@ -35,7 +35,7 @@ export default class PromiseSubscriber {
 
     this.retryTimeoutHandler = null
     this.poolTimeoutHandler = null
-    this.poolInterval = poolInterval
+    this.config = config
   }
 
   resolve(data) {
