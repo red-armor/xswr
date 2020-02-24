@@ -6,6 +6,9 @@ export default class Base {
     this.immediately = true
     this.fetcher = fetcher
     this.parent = null
+
+    this.retryTimeoutHandler = null
+    this.poolTimeoutHandler = null
   }
 
   teardown() {

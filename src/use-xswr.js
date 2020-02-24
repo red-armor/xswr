@@ -14,7 +14,7 @@ export default (...args) => {
   const base = useRef(new Base({update, fetcher: stateFetcher}))
 
   useEffect(() => {
-    stateFetcher.addSubscription(base.current)
+    stateFetcher.addSubscriber(base.current)
     return () => base.current.teardown()
   }, [stateFetcher.getProp("finalized")])
 
