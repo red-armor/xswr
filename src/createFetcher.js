@@ -64,11 +64,16 @@ proto.notifyData = function() {
   // 而B并不需要
 }
 
+proto.assertValidating = function() {
+  const state = this[STATE]
+  const {promise, finalized} = state
+  return promise && !finalized
+}
+
 proto.shouldValidate = function() {
   const state = this[STATE]
-  const {cacheStrategy, promise, finalized} = state
-  const isNotValidating = promise && finalized
-  return !cacheStrategy.canIUseCache() && isNotValidating
+  const {cacheStrategy} = state
+  return !cacheStrategy.canIUseCache() && !this.assertValidating()
 }
 
 // trigger fetcher to run...
@@ -101,7 +106,8 @@ proto.getData = function(prop) {
   const {data, cacheStrategy} = state
 
   if (data) return data
-  if (this.shouldValidate()) this.validate()
+  if (this.assertValidating()) promise.then(onFulfilled, onReject)
+  else if (!cacheStrategy.canIUseCache()) this.validate()
 }
 
 export default ({key, fetch, fetchArgs}) => {
@@ -114,9 +120,13 @@ export default ({key, fetch, fetchArgs}) => {
   createHiddenProperty(_fetcher, "promise", {
     then: function(onFulfilled, onReject) {
       const state = this[STATE]
-      const {data, error, promise} = state
+      const {data, error, promise, cacheStrategy} = state
+      // If there has data, return first
       if (data) onFulfilled(data)
-      if (this.shouldValidate()) this.validate()
+      // If there has ongoing request, bind `onFulfilled` and `onReject`
+      if (this.assertValidating()) promise.then(onFulfilled, onReject)
+      // If there is not ongoing request, check its validation.
+      else if (!cacheStrategy.canIUseCache()) this.validate()
     }.bind(_fetcher),
     catch: function(onCatch) {
       const state = this[STATE]

@@ -11,7 +11,6 @@ export default (...args) => {
     fetcher: stateFetcher,
     config
   })
-  console.log("state ", stateFetcher, subscriber)
 
   return subscriber.promise
 }

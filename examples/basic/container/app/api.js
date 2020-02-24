@@ -9,6 +9,6 @@ export const getInfo = () => {
         ],
         success: true
       })
-    }, 5000)
+    }, 1000)
   })
 }

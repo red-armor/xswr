@@ -1,4 +1,5 @@
 import {thenDescriptor, catchDescriptor, finallyDescriptor} from "./commons"
+import createPromise from "./createPromise"
 
 export default class PromiseSubscriber {
   constructor({config, fetcher}) {
@@ -13,24 +14,24 @@ export default class PromiseSubscriber {
       value: function(_onFulfilled, _onRejected) {
         this.onFulfilled = _onFulfilled
         this.onReject = _onRejected
-        fetcher.promise.then(this.onFulfilled, this.onReject)
-      }
+        this.fetcher.promise.then(this.onFulfilled, this.onReject)
+      }.bind(this)
     })
 
     Object.defineProperty(this.promise, "catch", {
       ...catchDescriptor,
       value: function(_onCatch) {
         this.onCatch = _onCatch
-        fetcher.promise.catch(this.onCatch)
-      }
+        this.fetcher.promise.catch(this.onCatch)
+      }.bind(this)
     })
 
     Object.defineProperty(this.promise, "finally", {
       ...finallyDescriptor,
       value: function(_onFinally) {
         this.onFinally = _onFinally
-        fetcher.promise.finally(this.onFinally)
-      }
+        this.fetcher.promise.finally(this.onFinally)
+      }.bind(this)
     })
 
     this.retryTimeoutHandler = null
