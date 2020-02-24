@@ -68,7 +68,7 @@ proto.shouldValidate = function() {
   const state = this[STATE]
   const {cacheStrategy, promise, finalized} = state
   const isNotValidating = promise && finalized
-  return !cacheStrategy.canIUseCache() && isNotValidating()
+  return !cacheStrategy.canIUseCache() && isNotValidating
 }
 
 // trigger fetcher to run...

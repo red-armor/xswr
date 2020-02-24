@@ -1,5 +1,5 @@
 export default class Base {
-  constructor({update, fetcher}) {
+  constructor({update, fetcher, config}) {
     this.deps = []
     this.update = update
     this.removers = []
@@ -9,6 +9,7 @@ export default class Base {
 
     this.retryTimeoutHandler = null
     this.poolTimeoutHandler = null
+    this.config = config
   }
 
   teardown() {
