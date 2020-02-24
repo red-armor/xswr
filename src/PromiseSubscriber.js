@@ -9,6 +9,7 @@ export default class PromiseSubscriber {
 
     this.fetcher = fetcher
 
+    // hook then, it will return a new promise...
     Object.defineProperty(this.promise, "then", {
       ...thenDescriptor,
       value: function(_onFulfilled, _onRejected) {
@@ -55,3 +56,19 @@ export default class PromiseSubscriber {
 
   teardown() {}
 }
+
+const data = createPromise()
+  .then(
+    result => {
+      console.log("chain result", result)
+      return result
+    },
+    err => {
+      console.log("err", err)
+    }
+  )
+  .then(result => {
+    console.log("chain result 2 ", result)
+  })
+
+console.log("data : ", data)

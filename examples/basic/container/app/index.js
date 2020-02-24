@@ -6,13 +6,9 @@ export default () => {
   // const result = useXS("/api/user", getInfo)
   // console.log("result ", result.data)
 
-  xs("/api/user", getInfo)
-    .then(result => {
-      console.log("user 1 ", result)
-    })
-    .finally(() => {
-      console.log("user 1 finally")
-    })
+  xs("/api/user", getInfo).then(result => {
+    console.log("user 1 ", result)
+  })
 
   setTimeout(() => {
     console.log("start send ------")
