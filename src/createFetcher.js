@@ -64,11 +64,19 @@ proto.notifyData = function() {
   // 而B并不需要
 }
 
+proto.shouldValidate = function() {
+  const state = this[STATE]
+  const {cacheStrategy, promise, finalized} = state
+  const isNotValidating = promise && finalized
+  return !cacheStrategy.canIUseCache() && isNotValidating()
+}
+
 // trigger fetcher to run...
 proto.validate = function() {
   const state = this[STATE]
-  const {fetch, fetchArgs} = state
+  const {fetch, fetchArgs, cacheStrategy} = state
 
+  state.finalized = false
   state.promise = fetch
     .apply(state, fetchArgs)
     .then(data => {
@@ -78,35 +86,22 @@ proto.validate = function() {
       return data
     })
     .catch(err => {
-      state.hasError = true
       state.error = err
+      state.hasError = true
       state.finalized = true
     })
     .finally(() => {
       state.finalized = true
+      cacheStrategy.updateTS(Date.now())
     })
-}
-
-proto.revalidate = function() {
-  const state = this[STATE]
-  const {fetch, fetchArgs} = state
-  state.finalized = false
-  this.validate()
 }
 
 proto.getData = function(prop) {
   const state = this[STATE]
-  const {data, isRevoked, retryStrategy} = state
+  const {data, cacheStrategy} = state
 
-  // 如果说已经触发过，并且没有报错的话直接返回结果
-  // if (isRevoked) {
-  //   if (!hasError) return data
-  //   else retryStrategy.run()
-  //   return
-  // }
-
-  this.setProp("isRevoked", true)
-  return this.getProp("data")
+  if (data) return data
+  if (this.shouldValidate()) this.validate()
 }
 
 export default ({key, fetch, fetchArgs}) => {
@@ -116,24 +111,24 @@ export default ({key, fetch, fetchArgs}) => {
   const poolStrategy = new PoolStrategy()
 
   // promise property to make a delay....
-  // createHiddenProperty(_fetcher, 'promise', {
-  //   then: (onFulfilled, onReject) => {
-  //     const state = this[STATE]
-  //     const {data, error, promise} = state
-  //     if (data) onFulfilled(data)
-  //     else onReject(error)
-  //   },
-  //   catch: onCatch => {
-  //     const state = this[STATE]
-  //     const {hasError, error, promise} = state
-  //     if (!promise && hasError) onCatch(error)
-  //   },
-  //   finally: onFinally => {
-  //     const state = this[STATE]
-  //     const {hasError, error, promise} = state
-  //     onFinally()
-  //   }
-  // })
+  createHiddenProperty(_fetcher, "promise", {
+    then: function(onFulfilled, onReject) {
+      const state = this[STATE]
+      const {data, error, promise} = state
+      if (data) onFulfilled(data)
+      if (this.shouldValidate()) this.validate()
+    }.bind(_fetcher),
+    catch: function(onCatch) {
+      const state = this[STATE]
+      const {hasError, error, promise} = state
+      if (!promise && hasError) onCatch(error)
+    }.bind(_fetcher),
+    finally: function(onFinally) {
+      const state = this[STATE]
+      const {hasError, error, promise} = state
+      onFinally()
+    }.bind(_fetcher)
+  })
 
   createHiddenProperty(_fetcher, STATE, {
     key,
