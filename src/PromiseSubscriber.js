@@ -13,7 +13,7 @@ export default class PromiseSubscriber {
       value: function(_onFulfilled, _onRejected) {
         this.onFulfilled = _onFulfilled
         this.onReject = _onRejected
-        fetcher.getProp("promise").then(this.onFulfilled, this.onReject)
+        fetcher.promise.then(this.onFulfilled, this.onReject)
       }
     })
 
@@ -21,7 +21,7 @@ export default class PromiseSubscriber {
       ...catchDescriptor,
       value: function(_onCatch) {
         this.onCatch = _onCatch
-        fetcher.getProp("promise").catch(this.onCatch)
+        fetcher.promise.catch(this.onCatch)
       }
     })
 
@@ -29,7 +29,7 @@ export default class PromiseSubscriber {
       ...finallyDescriptor,
       value: function(_onFinally) {
         this.onFinally = _onFinally
-        fetcher.getProp("promise").finally(this.onFinally)
+        fetcher.promise.finally(this.onFinally)
       }
     })
 
