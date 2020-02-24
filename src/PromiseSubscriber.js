@@ -1,5 +1,5 @@
 import {thenDescriptor, catchDescriptor, finallyDescriptor} from "./commons"
-import createPromise from "./createPromise"
+import resumablePromise from "./resumablePromise"
 
 export default class PromiseSubscriber {
   constructor({config, fetcher}) {
@@ -56,19 +56,3 @@ export default class PromiseSubscriber {
 
   teardown() {}
 }
-
-const data = createPromise()
-  .then(
-    result => {
-      console.log("chain result", result)
-      return result
-    },
-    err => {
-      console.log("err", err)
-    }
-  )
-  .then(result => {
-    console.log("chain result 2 ", result)
-  })
-
-console.log("data : ", data)
