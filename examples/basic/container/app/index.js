@@ -12,13 +12,16 @@ export default () => {
 
   setTimeout(() => {
     console.log("start send ------")
-    xs("/api/user", getInfo).then(result => {
+    const b = xs("/api/user", getInfo)
+    const c = b.then(result => {
       console.log("user 2 ", Date.now(), result)
     })
 
-    xs("/api/user/v2", getInfo).then(result => {
-      console.log("use 3 ", Date.now(), result)
-    })
+    console.log("b ", b, c)
+
+    // xs("/api/user/v2", getInfo).then(result => {
+    //   console.log("use 3 ", Date.now(), result)
+    // })
   }, 2000)
 
   return null

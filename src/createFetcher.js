@@ -122,7 +122,11 @@ export default ({key, fetch, fetchArgs}) => {
       const state = this[STATE]
       const {data, error, promise, cacheStrategy} = state
       // If there has data, return first
-      if (data) onFulfilled(data)
+      console.log("data ---", data, this.assertValidating())
+      if (data) {
+        console.log("on ful ", onFulfilled)
+        onFulfilled(data)
+      }
       // If there has ongoing request, bind `onFulfilled` and `onReject`
       if (this.assertValidating()) promise.then(onFulfilled, onReject)
       // If there is not ongoing request, check its validation.
