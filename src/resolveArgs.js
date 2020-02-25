@@ -1,6 +1,11 @@
 const defaultConfig = {
   immediately: false,
-  poolInterval: 0
+  poolInterval: 0,
+
+  // for cache strategy usage
+  maxAge: 0,
+  minThresholdMS: 300,
+  staleWhileRevalidateMS: 5 * 60 * 1000
 }
 
 export default args => {

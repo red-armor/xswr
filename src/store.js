@@ -6,11 +6,12 @@ class Store {
     this.currentBase = null
   }
 
-  getFetcher({key, fetch, fetchArgs}) {
+  getFetcher({key, fetch, fetchArgs, config}) {
     if (!this.fetchers[key]) {
       this.fetchers[key] = createFetcher({
         key,
         fetch,
+        config,
         fetchArgs
       })
     }

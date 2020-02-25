@@ -5,7 +5,7 @@ import resolveArgs from "./resolveArgs"
 
 export default (...args) => {
   const {config, key, fetchArgs, fetch} = resolveArgs(args)
-  const stateFetcher = store.getFetcher({key, fetchArgs, fetch})
+  const stateFetcher = store.getFetcher({key, fetchArgs, fetch, config})
   const [, setState] = useState(0)
   const update = useCallback(() => setState(Date.now()), [])
   const base = useRef(
