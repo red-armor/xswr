@@ -20,6 +20,21 @@ export default () => {
       })
       .then(result => {
         console.log("after user 2", result)
+        throw new Error("user 2 abort")
+      })
+      .then(
+        () => {},
+        () => {
+          console.log("i am in reject")
+          return "second"
+        }
+      )
+      .catch(err => {
+        console.log("catcher ")
+        return 7
+      })
+      .then(result => {
+        console.log("run after catch", result)
       })
 
     f.finally(() => {
@@ -32,8 +47,6 @@ export default () => {
     e.finally(() => {
       console.log("user 4 finished")
     })
-
-    console.log("e ", e, f)
 
     b.hooks.onFulfilled({a: 1})
 

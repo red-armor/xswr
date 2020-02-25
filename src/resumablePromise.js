@@ -14,7 +14,7 @@ export default function resumablePromise() {
     onResolve: null,
 
     // has default function value...
-    onReject: error => (promise.error = error),
+    onReject: null,
 
     // should be null on default...
     catcher: null,
@@ -24,33 +24,50 @@ export default function resumablePromise() {
   })
   createHiddenProperty(promise, "chainPromises", [])
   createHiddenProperty(promise, "source", null)
-  createHiddenProperty(promise, "result", null)
+  createHiddenProperty(promise, "result", undefined)
   createHiddenProperty(promise, "error", null)
 
   function performError(promise, reason) {
     const chainPromises = promise.chainPromises
     chainPromises.forEach(chainPromise => {
       const {catcher, finish, onReject} = chainPromise.hooks
-      if (catcher) catcher(reason)
+      // 正常情况下有`catcher`的话，是不会有`onResolve`的
+      if (catcher) {
+        catcher(reason)
+      }
+      if (onReject) {
+        onReject(reason)
+      }
       if (finish) finish()
-      onReject(reason)
     })
   }
 
   function performSuccess(promise, result) {
     const chainPromises = promise.chainPromises
-
     chainPromises.forEach(chainPromise => {
       const {catcher, finish, onReject, onResolve} = chainPromise.hooks
+      // 正常情况下有`catcher`的话，是不会有`onResolve`的
       if (onResolve) {
-        const value = onResolve(result)
+        onResolve(result)
+      }
+
+      // 如果成功的话，是不走catcher逻辑的
+      if (catcher) {
+        // catch 后面紧邻finally
+        if (finish) finish()
+        else {
+          chainPromise.chainPromises.forEach(promise => {
+            promise.hooks.onResolve(result)
+          })
+        }
       }
     })
   }
 
   function perform(promise, result, fn) {
     try {
-      const nextResult = fn(result)
+      const nextResult = fn(result) || null
+      // 如果说包含finally方法的话，说明它是没有deps的。
       if (promise.hooks.finish) {
         if (nextResult && typeof nextResult.then === "function") {
           nextResult.finally(() => promise.hooks.finish())
@@ -74,6 +91,7 @@ export default function resumablePromise() {
       }
     } catch (reason) {
       performError(promise, reason)
+      promise.error = reason
     }
   }
 
@@ -90,6 +108,7 @@ export default function resumablePromise() {
       }
 
       chainPromise.hooks.onReject = reason => {
+        promise.error = reason
         perform(chainPromise, reason, _onRejected)
       }
 
@@ -99,8 +118,14 @@ export default function resumablePromise() {
         chainPromise.hooks.onResolve(promise.source)
       }
 
-      if (promise.result) {
-        chainPromise.hooks.onResolve(promise.result)
+      if (promise.error) {
+        chainPromise.hooks.onReject(promise.source)
+      }
+
+      if (!(promise.result && typeof promise.result.then === "function")) {
+        if (typeof promise.result !== "undefined") {
+          chainPromise.hooks.onResolve(promise.result)
+        }
       }
 
       return chainPromise
@@ -111,11 +136,19 @@ export default function resumablePromise() {
   Object.defineProperty(promise, "catch", {
     value: function _catch(onRejected) {
       const chainPromise = resumablePromise()
-
       createHiddenProperty(chainPromise, "_parent_", promise)
       promise.chainPromises.push(chainPromise)
 
-      this.hooks.catcher = reason => perform(reason, onRejected)
+      chainPromise.hooks.catcher = reason => {
+        perform(chainPromise, reason, onRejected)
+      }
+
+      if (promise.error) {
+        perform(chainPromise, promise.error, onRejected)
+      } else {
+        chainPromise.source = promise.result
+      }
+
       return chainPromise
     }
   })
