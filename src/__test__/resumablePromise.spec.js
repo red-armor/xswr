@@ -1,32 +1,71 @@
 import resumablePromise from "../resumablePromise"
+import {getInfo} from "./api"
+import {xswr as xs} from "../.."
 
 describe("test", () => {
-  test("basic", () => {
-    const p = resumablePromise()
-    const t2 = p
-      .then(
-        result => {
-          console.log("chain result", result)
-          return result
-        },
-        err => {
-          console.log("err", err)
-        }
-      )
-      .then(result => {
-        console.log("chain result 2 ", result)
+  // https://github.com/facebook/jest/issues/3211
+  test("basic", done => {
+    xs("/api/user", getInfo).then(result => {
+      expect(result).toEqual({success: true})
+      expect(result).toEqual({success: false})
+    })
+
+    // jest.useFakeTimers();
+
+    setTimeout(() => {
+      const start = Date.now()
+      console.log("start ")
+      const b = xs("/api/user", getInfo)
+
+      const f = b
+        .then(result => {
+          console.log("xxxx")
+          // expect(result).toEqual({ success: true })
+          const delta = Date.now() - start
+          console.log("delta ", delta)
+
+          expect(delta).toBeNull()
+          expect(12).toBeLessThan(0)
+          return 3
+        })
+        .then(result => {
+          console.log("after user 2", result)
+          throw new Error("user 2 abort")
+        })
+        .then(
+          () => {},
+          () => {
+            console.log("i am in reject")
+            return "second"
+          }
+        )
+        .catch(err => {
+          console.log("catcher ")
+          return 7
+        })
+        .then(result => {
+          console.log("run after catch", result)
+        })
+
+      f.finally(() => {
+        console.log("user 2 finish")
       })
 
-    // console.log(' p' , p)
+      const e = b.then(result => {
+        console.log("user 4 ", Date.now() - start, result)
+      })
+      e.finally(() => {
+        console.log("user 4 finished")
+      })
 
-    p.hooks.onFulfilled("testing")
-    p.hooks.onFulfilled("hello")
-    // t2.then(result => {
-    //     console.log("chain result 2 ", result)
-    //   })
+      b.hooks.onFulfilled({a: 1})
 
-    console.log("data : ", p)
+      xs("/api/user/v2", getInfo).then(result => {
+        console.log("use 3 ", Date.now(), result)
+      })
+      done()
+    }, 2000)
 
-    expect(true).toBe(true)
+    // jest.runAllTimers();
   })
 })
