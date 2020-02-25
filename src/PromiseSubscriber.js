@@ -6,7 +6,7 @@ export default class PromiseSubscriber {
     this.promise = resumablePromise()
     this.fetcher = fetcher
 
-    console.log("fetcher promise ", this.fetcher.promise)
+    // console.log("fetcher promise ", this.fetcher.promise)
 
     this.fetcher.promise.then(
       result => {
