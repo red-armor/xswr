@@ -1,8 +1,15 @@
-import {createHiddenProperty} from "./commons"
+import {createHiddenProperty, createHiddenProperties} from "./commons"
 export default function resumablePromise() {
   const promise = {}
-  createHiddenProperty(promise, "hooks", {
-    onFulfilled: source => (promise.source = source),
+  createHiddenProperties(promise, "hooks", {
+    // trigger start....
+    onFulfilled: function(source) {
+      const {chainPromises} = this
+      this.source = source
+      chainPromises.forEach(chainPromise =>
+        chainPromise.hooks.onResolve(source)
+      )
+    }.bind(promise),
 
     onResolve: null,
 
@@ -20,44 +27,53 @@ export default function resumablePromise() {
   createHiddenProperty(promise, "result", null)
   createHiddenProperty(promise, "error", null)
 
-  function performError(reason) {
+  function performError(promise, reason) {
     const chainPromises = promise.chainPromises
-    chainPromises.forEach(promise => {
-      const {catcher, finish, onReject} = promise.hooks
+    chainPromises.forEach(chainPromise => {
+      const {catcher, finish, onReject} = chainPromise.hooks
       if (catcher) catcher(reason)
       if (finish) finish()
       onReject(reason)
     })
   }
 
-  function performSuccess(result) {
+  function performSuccess(promise, result) {
     const chainPromises = promise.chainPromises
+
     chainPromises.forEach(chainPromise => {
-      const {catcher, finish, onReject, onResolve} = promise.hooks
-      if (onResolve) onResolve(result)
-      if (finish) finish()
+      const {catcher, finish, onReject, onResolve} = chainPromise.hooks
+      if (onResolve) {
+        const value = onResolve(result)
+      }
     })
   }
 
-  function perform(result, fn) {
+  function perform(promise, result, fn) {
     try {
       const nextResult = fn(result)
-      const chainPromises = promise.chainPromises
+      if (promise.hooks.finish) {
+        if (nextResult && typeof nextResult.then === "function") {
+          nextResult.finally(() => promise.hooks.finish())
+        } else {
+          promise.hooks.finish()
+        }
+        return
+      }
 
-      if (nextResult && typeof promise.result.then === "function") {
-        result.then(
+      if (nextResult && typeof nextResult.then === "function") {
+        nextResult.then(
           promiseResult => {
             promise.result = promiseResult
-            performSuccess(promiseResult)
+            performSuccess(promise, promiseResult)
           },
-          err => performError(reason)
+          err => performError(promise, reason)
         )
       } else {
         promise.result = nextResult
-        performSuccess(nextResult)
+        performSuccess(promise, nextResult)
       }
     } catch (reason) {
-      performError(reason)
+      performError(promise, reason)
     }
   }
 
@@ -68,31 +84,23 @@ export default function resumablePromise() {
       createHiddenProperty(chainPromise, "_parent_", promise)
       promise.chainPromises.push(chainPromise)
 
-      this.hooks.onResolve = source => {
+      chainPromise.hooks.onResolve = source => {
         promise.source = source
-        perform(source, _onFulfilled)
+        perform(chainPromise, source, _onFulfilled)
       }
 
-      this.hooks.onReject = reason => {
-        perform(reason, _onRejected)
+      chainPromise.hooks.onReject = reason => {
+        perform(chainPromise, reason, _onRejected)
       }
-
-      const parent = promise._parent_
 
       // Just like `Promise.resolve(1)` provide a value directly.
       // Promise.resolve(1).then do not have parent
       if (promise.source) {
-        promise.hooks.onFulfilled(promise.source)
+        chainPromise.hooks.onResolve(promise.source)
       }
 
-      if (parent) {
-        const {result, error} = parent
-        promise.source = result
-        promise.error = error
-
-        if (result) {
-          promise.hooks.onFulfilled(result)
-        }
+      if (promise.result) {
+        chainPromise.hooks.onResolve(promise.result)
       }
 
       return chainPromise
@@ -114,6 +122,7 @@ export default function resumablePromise() {
 
   Object.defineProperty(promise, "finally", {
     value: function _finally(onFinally) {
+      onFinally()
       promise.hooks.finish = onFinally
     }
   })
