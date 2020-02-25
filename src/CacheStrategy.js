@@ -1,11 +1,9 @@
 export default class CacheStrategy {
-  constructor() {
-    this.maxAge = 0
+  constructor({maxAge, minThresholdMS, staleWhileRevalidateMS}) {
+    this.maxAge = maxAge
     this.latestUpdateTS = null
-
-    this.staleWhileRevalidateMS = 5 * 60 * 1000
-
-    this.minTSThreshold = 300
+    this.minThresholdMS = minThresholdMS
+    this.staleWhileRevalidateMS = staleWhileRevalidateMS
   }
 
   canIUseCache(immediately = false) {
@@ -16,7 +14,7 @@ export default class CacheStrategy {
     if (delta < 0) return false
 
     if (immediately) {
-      return delta < this.minTSThreshold
+      return delta < this.minThresholdMS
     } else {
       return delta < this.staleWhileRevalidateMS
     }

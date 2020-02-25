@@ -1,4 +1,4 @@
-import {createHiddenProperty, STATE} from "./commons"
+import {createHiddenProperty, createHiddenProperties, STATE} from "./commons"
 
 import CacheStrategy from "./CacheStrategy"
 import RetryStrategy from "./RetryStrategy"
@@ -110,21 +110,32 @@ proto.getData = function(prop) {
   else if (!cacheStrategy.canIUseCache()) this.validate()
 }
 
-export default ({key, fetch, fetchArgs}) => {
+export default ({key, fetch, fetchArgs, config}) => {
   const _fetcher = new fetcher()
-  const cacheStrategy = new CacheStrategy()
+  console.log("config : ", config)
+
+  const {
+    // cache strategy.
+    maxAge,
+    minThresholdMS,
+    staleWhileRevalidateMS
+  } = config
+
+  const cacheStrategy = new CacheStrategy({
+    maxAge,
+    minThresholdMS,
+    staleWhileRevalidateMS
+  })
   const retryStrategy = new RetryStrategy()
   const poolStrategy = new PoolStrategy()
 
   // promise property to make a delay....
-  createHiddenProperty(_fetcher, "promise", {
-    then: function(onFulfilled, onReject) {
+  createHiddenProperties(_fetcher, "promise", {
+    then: function _then(onFulfilled, onReject) {
       const state = this[STATE]
       const {data, error, promise, cacheStrategy} = state
       // If there has data, return first
-      console.log("data ---", data, this.assertValidating())
       if (data) {
-        console.log("on ful ", onFulfilled)
         onFulfilled(data)
       }
       // If there has ongoing request, bind `onFulfilled` and `onReject`
@@ -132,12 +143,12 @@ export default ({key, fetch, fetchArgs}) => {
       // If there is not ongoing request, check its validation.
       else if (!cacheStrategy.canIUseCache()) this.validate()
     }.bind(_fetcher),
-    catch: function(onCatch) {
+    catch: function _catch(onCatch) {
       const state = this[STATE]
       const {hasError, error, promise} = state
       if (!promise && hasError) onCatch(error)
     }.bind(_fetcher),
-    finally: function(onFinally) {
+    finally: function _finally(onFinally) {
       const state = this[STATE]
       const {hasError, error, promise} = state
       onFinally()

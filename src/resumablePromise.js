@@ -3,12 +3,63 @@ export default function resumablePromise() {
   const promise = {}
   createHiddenProperty(promise, "hooks", {
     onFulfilled: source => (promise.source = source),
-    onReject: error => (promise.error = error)
+
+    onResolve: null,
+
+    // has default function value...
+    onReject: error => (promise.error = error),
+
+    // should be null on default...
+    catcher: null,
+
+    // should be null on default...
+    finish: null
   })
   createHiddenProperty(promise, "chainPromises", [])
   createHiddenProperty(promise, "source", null)
   createHiddenProperty(promise, "result", null)
   createHiddenProperty(promise, "error", null)
+
+  function performError(reason) {
+    const chainPromises = promise.chainPromises
+    chainPromises.forEach(promise => {
+      const {catcher, finish, onReject} = promise.hooks
+      if (catcher) catcher(reason)
+      if (finish) finish()
+      onReject(reason)
+    })
+  }
+
+  function performSuccess(result) {
+    const chainPromises = promise.chainPromises
+    chainPromises.forEach(chainPromise => {
+      const {catcher, finish, onReject, onResolve} = promise.hooks
+      if (onResolve) onResolve(result)
+      if (finish) finish()
+    })
+  }
+
+  function perform(result, fn) {
+    try {
+      const nextResult = fn(result)
+      const chainPromises = promise.chainPromises
+
+      if (nextResult && typeof promise.result.then === "function") {
+        result.then(
+          promiseResult => {
+            promise.result = promiseResult
+            performSuccess(promiseResult)
+          },
+          err => performError(reason)
+        )
+      } else {
+        promise.result = nextResult
+        performSuccess(nextResult)
+      }
+    } catch (reason) {
+      performError(reason)
+    }
+  }
 
   Object.defineProperty(promise, "then", {
     value: function(_onFulfilled, _onRejected) {
@@ -17,49 +68,19 @@ export default function resumablePromise() {
       createHiddenProperty(chainPromise, "_parent_", promise)
       promise.chainPromises.push(chainPromise)
 
-      this.hooks.onFulfilled = source => {
+      this.hooks.onResolve = source => {
         promise.source = source
-        promise.result = _onFulfilled(source)
-        const chainPromises = promise.chainPromises
-
-        if (promise.result && typeof promise.result.then === "function") {
-          result.then(
-            result => {
-              chainPromises.forEach(chainPromise => {
-                chainPromise.hooks.onFulfilled(result)
-              })
-            },
-            err => {
-              chainPromises.forEach(chainPromise =>
-                chainPromise.hooks.onReject(result)
-              )
-            }
-          )
-        } else {
-          chainPromises.forEach(chainPromise => {
-            chainPromise.hooks.onFulfilled(promise.result)
-          })
-        }
+        perform(source, _onFulfilled)
       }
 
-      this.hooks.onReject = error => {
-        const errorResult = _onRejected(error)
-        if (errorResult) {
-          chainPromises.forEach(chainPromise =>
-            chainPromise.hooks.onFulfilled(errorResult)
-          )
-        } else {
-          chainPromises.forEach(chainPromise =>
-            chainPromise.hooks.onReject(error)
-          )
-        }
+      this.hooks.onReject = reason => {
+        perform(reason, _onRejected)
       }
-      console.log("pormise ", promise)
 
       const parent = promise._parent_
-      console.log("parent ", parent)
 
-      // 一般是直接对顶层调用了`onFulfilled`方法
+      // Just like `Promise.resolve(1)` provide a value directly.
+      // Promise.resolve(1).then do not have parent
       if (promise.source) {
         promise.hooks.onFulfilled(promise.source)
       }
@@ -75,6 +96,25 @@ export default function resumablePromise() {
       }
 
       return chainPromise
+    }
+  })
+
+  // catch will return a Promise as well
+  Object.defineProperty(promise, "catch", {
+    value: function _catch(onRejected) {
+      const chainPromise = resumablePromise()
+
+      createHiddenProperty(chainPromise, "_parent_", promise)
+      promise.chainPromises.push(chainPromise)
+
+      this.hooks.catcher = reason => perform(reason, onRejected)
+      return chainPromise
+    }
+  })
+
+  Object.defineProperty(promise, "finally", {
+    value: function _finally(onFinally) {
+      promise.hooks.finish = onFinally
     }
   })
 
