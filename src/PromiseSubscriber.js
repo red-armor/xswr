@@ -1,5 +1,5 @@
 import {thenDescriptor, catchDescriptor, finallyDescriptor} from "./commons"
-import resumablePromise from "./resumablePromise"
+import resumablePromise from "./ResumablePromise"
 
 export default class PromiseSubscriber {
   constructor({config, fetcher}) {
