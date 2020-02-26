@@ -1,164 +1,115 @@
 import {createHiddenProperty, createHiddenProperties} from "./commons"
-export default function resumablePromise() {
-  const promise = {}
-  createHiddenProperties(promise, "hooks", {
-    // trigger start....
-    onFulfilled: function(source) {
-      const {chainPromises} = this
-      this.source = source
-      chainPromises.forEach(chainPromise =>
-        chainPromise.hooks.onResolve(source)
-      )
-    }.bind(promise),
+const hasSymbol = typeof Symbol !== "undefined" && Symbol.for
+const STATE = hasSymbol
+  ? Symbol.for("__resumable_promise_")
+  : "__resumable_promise_"
 
-    onResolve: null,
+const PENDING = 0
+const FULFILLED = 1
+const REJECTED = 2
 
-    // has default function value...
-    onReject: null,
+const ResumablePromise = {}
+const proto = ResumablePromise.prototype
 
-    // should be null on default...
-    catcher: null,
+createHiddenProperty(promise, STATE, {
+  state: PENDING,
 
-    // should be null on default...
-    finish: null
-  })
-  createHiddenProperty(promise, "chainPromises", [])
-  createHiddenProperty(promise, "source", null)
-  createHiddenProperty(promise, "result", undefined)
-  createHiddenProperty(promise, "error", null)
+  receive: null,
+  result: null,
+  reason: null,
 
-  function performError(promise, reason) {
-    const chainPromises = promise.chainPromises
+  onFulfilled: null,
+
+  onRejected: null,
+
+  chainPromises: []
+})
+
+function resolve(promise, value) {
+  if (typeof value !== "object" && value.then) {
+    value.then(
+      result => resolve(promise, result),
+      reject => resolve(promise, reject)
+    )
+  } else {
+    promise[STATE].state = FULFILLED
+    promise[STATE].result = value
+    const chainPromises = promise[STATE].chainPromises
     chainPromises.forEach(chainPromise => {
-      const {catcher, finish, onReject} = chainPromise.hooks
-      // 正常情况下有`catcher`的话，是不会有`onResolve`的
-      if (catcher) {
-        catcher(reason)
-      }
-      if (onReject) {
-        onReject(reason)
-      }
-      if (finish) finish()
+      perform(promise, chainPromise)
     })
   }
+}
 
-  function performSuccess(promise, result) {
-    const chainPromises = promise.chainPromises
-    chainPromises.forEach(chainPromise => {
-      const {catcher, finish, onReject, onResolve} = chainPromise.hooks
-      // 正常情况下有`catcher`的话，是不会有`onResolve`的
-      if (onResolve) {
-        onResolve(result)
-      }
+function reject(promise, reason) {
+  promise[STATE].state = REJECTED
+  promise[STATE].reason = reason
 
-      // 如果成功的话，是不走catcher逻辑的
-      if (catcher) {
-        // catch 后面紧邻finally
-        if (finish) finish()
-        else {
-          chainPromise.chainPromises.forEach(promise => {
-            promise.hooks.onResolve(result)
-          })
-        }
-      }
-    })
+  chainPromises.forEach(chainPromise => {
+    perform(promise, chainPromise)
+  })
+}
+
+function perform(promise, sub) {
+  try {
+    let value
+    if (promise[STATE].state === FULFILLED) {
+      value = sub[STATE].onFulfilled(promise[STATE].result)
+    }
+
+    if (promise[STATE].state === REJECTED) {
+      value = sub[STATE].onRejected(promise[STATE].reason)
+    }
+    resolve(sub, value)
+  } catch (err) {
+    reject(sub, err)
   }
+}
 
-  function perform(promise, result, fn) {
-    try {
-      const nextResult = fn(result) || null
-      // 如果说包含finally方法的话，说明它是没有deps的。
-      if (promise.hooks.finish) {
-        if (nextResult && typeof nextResult.then === "function") {
-          nextResult.finally(() => promise.hooks.finish())
-        } else {
-          promise.hooks.finish()
-        }
-        return
-      }
+proto.then = function(_onFulfilled, _onRejected) {
+  const promise = this
+  const chainPromise = new ResumablePromise()
+  chainPromise[STATE].onFulfilled = _onFulfilled
+  chainPromise[STATE].onRejected = _onRejected
+  promise[STATE].chainPromises.push(chainPromise)
 
-      if (nextResult && typeof nextResult.then === "function") {
-        nextResult.then(
-          promiseResult => {
-            promise.result = promiseResult
-            performSuccess(promise, promiseResult)
-          },
-          err => performError(promise, reason)
-        )
-      } else {
-        promise.result = nextResult
-        performSuccess(promise, nextResult)
-      }
-    } catch (reason) {
-      performError(promise, reason)
-      promise.error = reason
-    }
+  perform(promise, chainPromise)
+
+  return chainPromise
+}
+
+// catch will return a Promise as well
+proto.catch = function _catch(_onRejected) {
+  const promise = this
+  const chainPromise = new ResumablePromise()
+  chainPromise[STATE].onFulfilled = null
+  chainPromise[STATE].onRejected = _onRejected
+
+  promise[STATE].chainPromises.push(chainPromise)
+  return chainPromise
+}
+
+proto.finally = function _finally(onFinally) {
+  const promise = this
+  const chainPromise = new ResumablePromise()
+  promise[STATE].chainPromises.push(chainPromise)
+  chainPromise[STATE].onFulfilled = function(result) {
+    onFinally()
+    return chainPromise.resolve(result)
   }
+  chainPromise[STATE].onRejected = function(reason) {
+    onFinally()
+    return chainPromise.reject(reason)
+  }
+  return chainPromise
+}
 
-  Object.defineProperty(promise, "then", {
-    value: function(_onFulfilled, _onRejected) {
-      const chainPromise = resumablePromise()
+proto.resolve = function(result) {
+  const promise = this
+  resolve(promise, result)
+}
 
-      createHiddenProperty(chainPromise, "_parent_", promise)
-      promise.chainPromises.push(chainPromise)
-
-      chainPromise.hooks.onResolve = source => {
-        promise.source = source
-        perform(chainPromise, source, _onFulfilled)
-      }
-
-      chainPromise.hooks.onReject = reason => {
-        promise.error = reason
-        perform(chainPromise, reason, _onRejected)
-      }
-
-      // Just like `Promise.resolve(1)` provide a value directly.
-      // Promise.resolve(1).then do not have parent
-      if (promise.source) {
-        chainPromise.hooks.onResolve(promise.source)
-      }
-
-      if (promise.error) {
-        chainPromise.hooks.onReject(promise.source)
-      }
-
-      if (!(promise.result && typeof promise.result.then === "function")) {
-        if (typeof promise.result !== "undefined") {
-          chainPromise.hooks.onResolve(promise.result)
-        }
-      }
-
-      return chainPromise
-    }
-  })
-
-  // catch will return a Promise as well
-  Object.defineProperty(promise, "catch", {
-    value: function _catch(onRejected) {
-      const chainPromise = resumablePromise()
-      createHiddenProperty(chainPromise, "_parent_", promise)
-      promise.chainPromises.push(chainPromise)
-
-      chainPromise.hooks.catcher = reason => {
-        perform(chainPromise, reason, onRejected)
-      }
-
-      if (promise.error) {
-        perform(chainPromise, promise.error, onRejected)
-      } else {
-        chainPromise.source = promise.result
-      }
-
-      return chainPromise
-    }
-  })
-
-  Object.defineProperty(promise, "finally", {
-    value: function _finally(onFinally) {
-      onFinally()
-      promise.hooks.finish = onFinally
-    }
-  })
-
-  return promise
+proto.reject = function(reason) {
+  const promise = this
+  reject(promise, reason)
 }
