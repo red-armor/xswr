@@ -1,4 +1,4 @@
-import ResumablePromise from "../ResumablePromise"
+import ResumablePromise from "../src/ResumablePromise"
 
 const resolve = jest.fn()
 const reject = jest.fn()

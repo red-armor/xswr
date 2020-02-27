@@ -1,41 +1,23 @@
 import {createHiddenProperty, createHiddenProperties, STATE} from "./commons"
 
-import CacheStrategy from "./CacheStrategy"
-import RetryStrategy from "./RetryStrategy"
-import PoolStrategy from "./PoolStrategy"
-
 function fetcher() {}
 const proto = fetcher.prototype
 
-proto.getProp = function(prop) {
-  const state = this[STATE]
-  return state[prop]
-}
-
-proto.setProp = function(prop, value) {
-  const state = this[STATE]
-  state[prop] = value
-}
-
 proto.addPromiseSubscriber = function(subscriber) {
   const state = this[STATE]
-  if (this.getProp("finalized")) {
-    const {data, error} = state
-    if (!hasError) subscriber.resolver(data)
-    else subscriber.rejecter(error)
-    return
-  }
-
-  state.promiseSubscribers.push(subscriber)
-  subscriber.addRemover(() => {
+  subscriber.remover = () => {
     const index = state.promiseSubscribers.indexOf(subscriber)
     if (index !== -1) state.promiseSubscribers.splice(index, 1)
+  }
+  state.promiseSubscribers.push({
+    subscriber,
+    remove: () => subscriber.teardown()
   })
 }
 
 proto.addSubscriber = function(subscriber) {
   const state = this[STATE]
-  if (this.getProp("finalized")) return
+  if (state("finalized")) return
 
   // run fetch immediately
   state.subscribers.push(subscriber)
@@ -55,25 +37,35 @@ proto.notifyData = function() {
   const {data, promiseSubscribers, subscribers} = state
 
   // notify subscriber
-  state.subscribers.forEach(subscriber => subscriber.triggerUpdate())
-  state.subscribers = []
+  // state.subscribers.forEach(subscriber => subscriber.triggerUpdate())
+  // state.subscribers = []
 
-  // notify promiseSubscriber
-  state.promiseSubscribers.forEach(subscriber => subscriber.resolver(data))
+  promiseSubscribers.forEach(({subscriber, remove}) => {
+    subscriber.resolve(data)
+    remove()
+  })
   // 是否对promiseSubscribers进行操作，需要业务自己实现，比如有可能A需要对请求进行pool
   // 而B并不需要
+}
+
+proto.notifyError = function() {
+  const state = this[STATE]
+  const {error, promiseSubscribers, subscribers} = state
+
+  // notify subscriber
+  // state.subscribers.forEach(subscriber => subscriber.triggerUpdate())
+  // state.subscribers = []
+
+  promiseSubscribers.forEach(({subscriber, remove}) => {
+    subscriber.reject(error)
+    remove()
+  })
 }
 
 proto.assertValidating = function() {
   const state = this[STATE]
   const {promise, finalized} = state
   return promise && !finalized
-}
-
-proto.shouldValidate = function() {
-  const state = this[STATE]
-  const {cacheStrategy} = state
-  return !cacheStrategy.canIUseCache() && !this.assertValidating()
 }
 
 // trigger fetcher to run...
@@ -86,18 +78,16 @@ proto.validate = function() {
     .apply(state, fetchArgs)
     .then(data => {
       state.data = data
+      state.lastUpdatedMS = Date.now()
       state.finalized = true
       this.notifyData()
-      return data
     })
     .catch(err => {
       state.error = err
       state.hasError = true
       state.finalized = true
-    })
-    .finally(() => {
-      state.finalized = true
-      cacheStrategy.updateTS(Date.now())
+      state.lastUpdatedMS = Date.now()
+      this.notifyError()
     })
 }
 
@@ -110,48 +100,26 @@ proto.getData = function(prop) {
   else if (!cacheStrategy.canIUseCache()) this.validate()
 }
 
-export default ({key, fetch, fetchArgs, config}) => {
-  const _fetcher = new fetcher()
+proto.handlePromise = function(subscriber) {
+  const state = this[STATE]
   const {
-    // cache strategy.
-    maxAge,
-    minThresholdMS,
-    staleWhileRevalidateMS
-  } = config
+    scope: {cacheStrategy}
+  } = subscriber
+  const {data} = state
+  // If there has data, return first
+  if (data) subscriber.resolve(result)
+  // If there has ongoing request, bind `onFulfilled` and `onReject`
+  if (this.assertValidating()) {
+    this.addPromiseSubscriber(subscriber)
+  } else if (!cacheStrategy.canIUseCache()) {
+    // If there is not ongoing request, check its validation.
+    this.addPromiseSubscriber(subscribers)
+    this.validate()
+  }
+}
 
-  const cacheStrategy = new CacheStrategy({
-    maxAge,
-    minThresholdMS,
-    staleWhileRevalidateMS
-  })
-  const retryStrategy = new RetryStrategy()
-  const poolStrategy = new PoolStrategy()
-
-  // promise property to make a delay....
-  createHiddenProperties(_fetcher, "promise", {
-    then: function _then(onFulfilled, onReject) {
-      const state = this[STATE]
-      const {data, error, promise, cacheStrategy} = state
-      // If there has data, return first
-      if (data) {
-        onFulfilled(data)
-      }
-      // If there has ongoing request, bind `onFulfilled` and `onReject`
-      if (this.assertValidating()) promise.then(onFulfilled, onReject)
-      // If there is not ongoing request, check its validation.
-      else if (!cacheStrategy.canIUseCache()) this.validate()
-    }.bind(_fetcher),
-    catch: function _catch(onCatch) {
-      const state = this[STATE]
-      const {hasError, error, promise} = state
-      if (!promise && hasError) onCatch(error)
-    }.bind(_fetcher),
-    finally: function _finally(onFinally) {
-      const state = this[STATE]
-      const {hasError, error, promise} = state
-      onFinally()
-    }.bind(_fetcher)
-  })
+export default ({key, fetch, fetchArgs}) => {
+  const _fetcher = new fetcher()
 
   createHiddenProperty(_fetcher, STATE, {
     key,
@@ -171,9 +139,7 @@ export default ({key, fetch, fetchArgs, config}) => {
     onFetching: false,
     hasError: false,
     error: null,
-    cacheStrategy,
-    retryStrategy,
-    poolStrategy
+    lastUpdatedMS: null
   })
 
   // 创建好fetcher就需要开始进行fetch了

@@ -1,38 +1,32 @@
-import {thenDescriptor, catchDescriptor, finallyDescriptor} from "./commons"
 import ResumablePromise from "./ResumablePromise"
 
 export default class PromiseSubscriber {
-  constructor({config, fetcher}) {
+  constructor({fetcher, scope}) {
     this.promise = new ResumablePromise()
     this.fetcher = fetcher
+    this.scope = scope
+    this.remover = null
 
-    this.fetcher.promise.then(
-      result => {
-        this.promise.resolve(result)
-      },
-      error => {
-        this.promise.reject(error)
-      }
-    )
-
-    this.retryTimeoutHandler = null
-    this.poolTimeoutHandler = null
-    this.config = config
+    this.fetcher.promise.handlePromise(this)
   }
 
-  resolve(data) {
-    this.resolver(resolve)
-
-    if (this.poolInterval) {
-      this.poolTimeoutHandler = setTimeout(() => {
-        this.fetcher.validate()
-      }, this.poolInterval)
+  resolve(result) {
+    if (!this.scope.assertResultEqual(result)) {
+      this.scope.usedData = result
+      this.promise.resolve(result)
     }
   }
 
   reject(err) {
-    this.rejecter(err)
+    if (!this.scope.assertErrorEqual(err)) {
+      this.promise.reject(err)
+    }
   }
 
-  teardown() {}
+  teardown() {
+    if (typeof this.remover === "function") {
+      this.remover()
+    }
+    this.remover = null
+  }
 }
