@@ -112,8 +112,6 @@ proto.getData = function(prop) {
 
 export default ({key, fetch, fetchArgs, config}) => {
   const _fetcher = new fetcher()
-  // console.log("config : ", config)
-
   const {
     // cache strategy.
     maxAge,

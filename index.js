@@ -1,4 +1,2 @@
-import useXS from "./src/use-xswr"
-import xswr from "./src/xswr"
-
-export {useXS, xswr}
+export {default as useXS} from "./src/use-xswr"
+export {default as xs} from "./src/xswr"

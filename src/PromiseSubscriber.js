@@ -6,8 +6,6 @@ export default class PromiseSubscriber {
     this.promise = new ResumablePromise()
     this.fetcher = fetcher
 
-    // console.log("fetcher promise ", this.fetcher.promise)
-
     this.fetcher.promise.then(
       result => {
         this.promise.resolve(result)

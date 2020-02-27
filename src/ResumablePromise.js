@@ -73,7 +73,7 @@ function perform(promise, sub) {
   }
 }
 
-proto.then = function(_onFulfilled, _onRejected) {
+proto.then = function _then(_onFulfilled, _onRejected) {
   const promise = this
   const chainPromise = new ResumablePromise()
   chainPromise[STATE].onFulfilled =
@@ -120,12 +120,12 @@ proto.finally = function _finally(onFinally) {
   return chainPromise
 }
 
-proto.resolve = function(result) {
+proto.resolve = function _resolve(result) {
   const promise = this
   resolve(promise, result)
 }
 
-proto.reject = function(reason) {
+proto.reject = function _reject(reason) {
   const promise = this
   reject(promise, reason)
 }

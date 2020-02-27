@@ -1,12 +1,11 @@
 import React from "react"
-import {useXS, xswr as xs} from "xswr"
+import {useXS, xs} from "xswr"
 import {getInfo} from "./api"
 import ResumablePromise from "xswr/src/ResumablePromise"
-console.log("R ", ResumablePromise)
 
 export default () => {
   const promise = new ResumablePromise()
-  console.log("promise ", promise)
+
   const b = promise.then(result => {
     console.log("result ", result)
   })
