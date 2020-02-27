@@ -1,19 +1,19 @@
 import {thenDescriptor, catchDescriptor, finallyDescriptor} from "./commons"
-import resumablePromise from "./ResumablePromise"
+import ResumablePromise from "./ResumablePromise"
 
 export default class PromiseSubscriber {
   constructor({config, fetcher}) {
-    this.promise = resumablePromise()
+    this.promise = new ResumablePromise()
     this.fetcher = fetcher
 
     // console.log("fetcher promise ", this.fetcher.promise)
 
     this.fetcher.promise.then(
       result => {
-        this.promise.hooks.onFulfilled(result)
+        this.promise.resolve(result)
       },
       error => {
-        this.promise.hooks.onReject(error)
+        this.promise.reject(error)
       }
     )
 

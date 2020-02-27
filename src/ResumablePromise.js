@@ -1,3 +1,5 @@
+// Basically, Promise A+ compliant.
+
 import {createHiddenProperty, createHiddenProperties} from "./commons"
 const hasSymbol = typeof Symbol !== "undefined" && Symbol.for
 
