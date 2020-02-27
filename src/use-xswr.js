@@ -2,16 +2,18 @@ import {useEffect, useCallback, useState, useRef} from "react"
 import store from "./store"
 import Base from "./Base"
 import resolveArgs from "./resolveArgs"
+import Scope from "./Scope"
 
 export default (...args) => {
-  const {config, key, fetchArgs, fetch} = resolveArgs(args)
-  const stateFetcher = store.getFetcher({key, fetchArgs, fetch, config})
+  const {key, fetchArgs, fetch, config} = resolveArgs(args)
+  const stateFetcher = store.getFetcher({key, fetchArgs, fetch})
   const [, setState] = useState(0)
+  const scope = new Scope(config)
   const update = useCallback(() => setState(Date.now()), [])
   const base = useRef(
     new Base({
       update,
-      config,
+      scope,
       fetcher: stateFetcher
     })
   )
