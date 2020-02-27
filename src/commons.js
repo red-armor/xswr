@@ -31,10 +31,12 @@ export const thenDescriptor = Object.getOwnPropertyDescriptor(
   Promise.prototype,
   "then"
 )
+
 export const catchDescriptor = Object.getOwnPropertyDescriptor(
   Promise.prototype,
   "catch"
 )
+
 export const finallyDescriptor = Object.getOwnPropertyDescriptor(
   Promise.prototype,
   "finally"
