@@ -8,7 +8,7 @@ import Scope from "./Scope"
 export default (...args) => {
   const {config, key, fetchArgs, fetch} = resolveArgs(args)
   const stateFetcher = store.getFetcher({key, fetchArgs, fetch})
-  const scope = new Scope(scope)
+  const scope = new Scope(config)
 
   const subscriber = new PromiseSubscriber({
     fetcher: stateFetcher,

@@ -107,13 +107,13 @@ proto.handlePromise = function(subscriber) {
   } = subscriber
   const {data} = state
   // If there has data, return first
-  if (data) subscriber.resolve(result)
+  if (data) subscriber.resolve(data)
   // If there has ongoing request, bind `onFulfilled` and `onReject`
   if (this.assertValidating()) {
     this.addPromiseSubscriber(subscriber)
   } else if (!cacheStrategy.canIUseCache()) {
     // If there is not ongoing request, check its validation.
-    this.addPromiseSubscriber(subscribers)
+    this.addPromiseSubscriber(subscriber)
     this.validate()
   }
 }
