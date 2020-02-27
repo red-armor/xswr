@@ -1,3 +1,4 @@
+import {createHiddenProperty, createHiddenProperties} from "./commons"
 const hasSymbol = typeof Symbol !== "undefined" && Symbol.for
 
 const STATE = hasSymbol
@@ -9,7 +10,8 @@ const FULFILLED = 1
 const REJECTED = 2
 
 export default function ResumablePromise() {
-  this[STATE] = {
+  const state = {}
+  createHiddenProperties(state, {
     state: PENDING,
 
     receive: null,
@@ -21,7 +23,8 @@ export default function ResumablePromise() {
     onRejected: null,
 
     chainPromises: []
-  }
+  })
+  createHiddenProperty(this, STATE, state)
 }
 const proto = ResumablePromise.prototype
 

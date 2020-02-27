@@ -13,13 +13,11 @@ export const createHiddenProperty = (target, prop, value) => {
   })
 }
 
-export const createHiddenProperties = (target, prop, value) => {
+export const createHiddenProperties = (target, value) => {
   const keys = Object.keys(value)
-  const obj = Object.create(null)
   keys.forEach(key => {
-    createHiddenProperty(obj, key, value[key])
+    createHiddenProperty(target, key, value[key])
   })
-  createHiddenProperty(target, prop, obj)
 }
 
 const hasSymbol = typeof Symbol !== "undefined" && Symbol.for
