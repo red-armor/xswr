@@ -18,9 +18,11 @@ export default class PromiseSubscriber {
   }
 
   reject(err) {
-    if (!this.scope.assertErrorEqual(err)) {
-      this.promise.reject(err)
-    }
+    this.promise.reject(err)
+
+    // if (!this.scope.assertErrorEqual(err)) {
+    //   this.promise.resolve(1)
+    // }
   }
 
   teardown() {

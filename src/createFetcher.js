@@ -74,21 +74,21 @@ proto.validate = function() {
   const {fetch, fetchArgs, cacheStrategy} = state
 
   state.finalized = false
-  state.promise = fetch
-    .apply(state, fetchArgs)
-    .then(data => {
+  state.promise = fetch.apply(state, fetchArgs).then(
+    data => {
       state.data = data
       state.lastUpdatedMS = Date.now()
       state.finalized = true
       this.notifyData()
-    })
-    .catch(err => {
+    },
+    err => {
       state.error = err
       state.hasError = true
       state.finalized = true
       state.lastUpdatedMS = Date.now()
       this.notifyError()
-    })
+    }
+  )
 }
 
 proto.getData = function(prop) {
