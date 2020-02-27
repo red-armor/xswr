@@ -7,7 +7,7 @@ export default class PromiseSubscriber {
     this.scope = scope
     this.remover = null
 
-    this.fetcher.promise.handlePromise(this)
+    this.fetcher.handlePromise(this)
   }
 
   resolve(result) {

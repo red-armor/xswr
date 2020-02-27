@@ -3,7 +3,6 @@ import createFetcher from "./createFetcher"
 class Store {
   constructor() {
     this.fetchers = {}
-    this.currentBase = null
   }
 
   getFetcher({key, fetch, fetchArgs, config}) {
