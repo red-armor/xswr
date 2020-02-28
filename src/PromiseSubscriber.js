@@ -5,6 +5,7 @@ export default class PromiseSubscriber {
     this.promise = new ResumablePromise()
     this.fetcher = fetcher
     this.scope = scope
+    this.scope.bind(this)
     this.remover = null
 
     this.fetcher.handlePromise(this)
@@ -18,11 +19,15 @@ export default class PromiseSubscriber {
   }
 
   reject(err) {
-    this.promise.reject(err)
+    if (!this.scope.assertErrorEqual(err)) {
+      this.promise.resolve(err)
+    }
 
-    // if (!this.scope.assertErrorEqual(err)) {
-    //   this.promise.resolve(1)
-    // }
+    this.scope.attemptToRetry()
+  }
+
+  validate() {
+    this.fetcher.handlePromise(this)
   }
 
   teardown() {
