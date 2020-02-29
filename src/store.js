@@ -16,11 +16,6 @@ class Store {
 
     return this.fetchers[key]
   }
-
-  addFetcher(fetcher) {
-    const key = fetcher.getProp("key")
-    this.fetchers[key] = fetcher
-  }
 }
 
 export default new Store()

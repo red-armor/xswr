@@ -9,10 +9,11 @@ export default class ComponentSubscriber {
     this.id = `component_subscriber_${count++}`
     this.deps = []
     this.updater = updater
-    this.removers = []
+    this.remover = []
     this.immediately = true
     this.children = []
     this.scope = scope
+    this.scope.bind(this)
     this.dataRef = null
 
     this.fetch = fetch
@@ -31,7 +32,6 @@ export default class ComponentSubscriber {
         parts = this.fetchArgs[0].call(null)
         this.fetchArgs = parts
       } catch (err) {
-        console.log("err ", err)
         // do nothing..
       }
     } else {
@@ -57,12 +57,10 @@ export default class ComponentSubscriber {
   }
 
   teardown() {
-    this.removers.forEach(remove => remove())
-    this.removers = []
-  }
-
-  addRemover(remove) {
-    this.removers.push(remove)
+    if (typeof this.remover === "function") {
+      this.remover()
+    }
+    this.remover = null
   }
 
   handleUpdate(newData) {
@@ -77,7 +75,9 @@ export default class ComponentSubscriber {
     }
   }
 
-  handleError(err) {}
+  handleError(err) {
+    this.scope.attemptToRetry()
+  }
 
   attemptToFetch() {
     if (!this.fetcher) {
@@ -109,5 +109,9 @@ export default class ComponentSubscriber {
       this.deps.push(state)
       state.addChild(this)
     }
+  }
+
+  revalidate() {
+    this.fetcher.revalidate(this)
   }
 }

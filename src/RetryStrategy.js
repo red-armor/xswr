@@ -1,29 +1,32 @@
 export default class RetryStrategy {
-  constructor({errorRetryInterval}) {
+  constructor({interval, maxCount}) {
     this.count = 0
     this.belongs = null
     this.timeoutHandler = null
-    this.errorRetryInterval = errorRetryInterval
+    this.interval = interval
+    this.maxCount = maxCount
   }
 
   nextTick() {
-    const timeout =
-      ~~((Math.random() + 0.5) * (1 << this.count)) * this.errorRetryInterval
-    this.count += 1
+    // exponential back-off
+    // http://blog.darrengordon.net/2014/11/exponential-backoff-in-javascript.html
+    this.count = Math.max(this.count * 2, 1)
+    const timeout = this.count * this.interval
     return timeout
-  }
-
-  reset() {
-    this.count = 0
   }
 
   resumeTick() {
     this.count = 0
-    const tick = this.nextTick()
+    this.continueTick()
+  }
 
-    this.timeoutHandler = setTimeout(() => {
-      this.belongs.validate()
-    }, tick)
+  continueTick() {
+    const tick = this.nextTick()
+    if (tick) {
+      this.timeoutHandler = setTimeout(() => {
+        this.belongs.revalidate()
+      }, tick)
+    }
   }
 
   cleanup() {

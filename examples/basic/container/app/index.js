@@ -16,11 +16,10 @@ export default () => {
       return ["/api/city", {city: data.data[0].location}]
     },
     (url, params) => {
-      console.log("get ", url, params)
       return getInfo(url, params)
     },
     [result]
   )
-  console.log("data ", data, city, result)
+  console.log("data ", data, city.data, result)
   return null
 }

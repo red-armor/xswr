@@ -20,7 +20,8 @@ export default class Scope {
 
       poolInterval,
 
-      errorRetryInterval
+      retryInterval,
+      retryMaxCount
     } = config
 
     this.cacheStrategy = new CacheStrategy({
@@ -35,7 +36,8 @@ export default class Scope {
     })
 
     this.retryStrategy = new RetryStrategy({
-      interval: errorRetryInterval
+      interval: retryInterval,
+      maxCount: retryMaxCount
     })
 
     this.usedData = null
@@ -63,7 +65,6 @@ export default class Scope {
 
   assertErrorEqual(error) {
     this.cleanup()
-    this.attemptToRetry()
     return false
   }
 
@@ -78,6 +79,8 @@ export default class Scope {
     if (this.mode == MODE.NORMAL || this.mode === MODE.POOL) {
       this.mode = MODE.RETRY
       this.retryStrategy.resumeTick()
+    } else {
+      this.retryStrategy.continueTick()
     }
   }
 

@@ -9,7 +9,10 @@ const defaultConfig = {
   minThresholdMS: 300,
   staleWhileRevalidateMS: 5 * 60 * 1000,
 
-  poolInterval: 0
+  poolInterval: 0,
+
+  retryInterval: 3000,
+  retryMaxCount: 3
 }
 
 export const buildKey = (url, params) => {
