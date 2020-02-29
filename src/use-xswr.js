@@ -9,7 +9,7 @@ const STATE = USE_XSWR
 
 // last one mayBe deps...
 export default (...args) => {
-  const {fetchArgs, fetch, config} = resolveArgs(args)
+  const {fetchArgs, fetch, config, deps} = resolveArgs(args)
 
   const scopeRef = useRef()
   if (!scopeRef.current) {
@@ -25,6 +25,7 @@ export default (...args) => {
       updater,
       fetch,
       fetchArgs,
+      deps,
       scope: scopeRef.current
     })
   }
@@ -40,8 +41,6 @@ export default (...args) => {
       }
     })
   }
-
-  store.setCurrent(subscriberRef.current)
 
   useEffect(() => {
     return () => {

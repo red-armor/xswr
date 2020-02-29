@@ -3,7 +3,6 @@ import createFetcher from "./createFetcher"
 class Store {
   constructor() {
     this.fetchers = {}
-    this.currentComponentSubscriber = null
   }
 
   getFetcher({key, fetch, fetchArgs}) {
@@ -21,10 +20,6 @@ class Store {
   addFetcher(fetcher) {
     const key = fetcher.getProp("key")
     this.fetchers[key] = fetcher
-  }
-
-  setCurrent(subscriber) {
-    this.currentComponentSubscriber = subscriber
   }
 }
 
