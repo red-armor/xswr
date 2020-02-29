@@ -1,23 +1,25 @@
 import equal from "deep-equal"
 import store from "./store"
 import {buildKey} from "./resolveArgs"
+import {USE_XSWR} from "./commons"
 
 let count = 0
 export default class ComponentSubscriber {
-  constructor({updater, scope, fetch, fetchArgs}) {
+  constructor({updater, scope, fetch, fetchArgs, deps}) {
     this.id = `component_subscriber_${count++}`
     this.deps = []
     this.updater = updater
     this.removers = []
     this.immediately = true
-    this.parents = []
+    this.children = []
     this.scope = scope
     this.dataRef = null
 
     this.fetch = fetch
     this.fetchArgs = fetchArgs
 
-    store.setCurrent(this)
+    this.handleDeps(deps)
+
     this.attemptToFetch()
   }
 
@@ -43,12 +45,10 @@ export default class ComponentSubscriber {
     return key
   }
 
-  // If not has fetch, which means parents is not resolved, then return undefined.
+  // If not has fetch, which means deps is not resolved, then return undefined.
   getData() {
-    store.setCurrent(this)
-
     if (!this.fetcher) {
-      if (this.parents.length) this.attemptToFetch()
+      if (this.deps.length) this.attemptToFetch()
       else throw new Error("Maybe you are using async method to get key")
       return
     }
@@ -90,18 +90,23 @@ export default class ComponentSubscriber {
     })
   }
 
-  addParent(parent) {
-    const index = this.parents.indexOf(parent)
+  addChild(parent) {
+    const index = this.children.indexOf(parent)
     if (index === -1) {
-      this.parents.push(parent)
+      this.children.push(parent)
     }
   }
 
+  handleDeps(deps) {
+    deps.forEach(dep => this.addDeps(dep))
+  }
+
   addDeps(dep) {
-    const index = this.deps.indexOf(dep)
+    const state = dep[USE_XSWR]
+    const index = this.deps.indexOf(state)
     if (index === -1) {
-      this.deps.push(dep)
-      dep.addParent(this)
+      this.deps.push(state)
+      state.addChild(this)
     }
   }
 }
