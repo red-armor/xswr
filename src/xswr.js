@@ -10,6 +10,7 @@ export default (...args) => {
   const {config, fetchArgs, fetch} = resolveArgs(args)
   const key = buildKey(fetchArgs[0], fetchArgs[1])
   const stateFetcher = store.getFetcher({key, fetchArgs, fetch})
+  stateFetcher.validate()
   const scope = new Scope(config)
 
   const subscriber = new PromiseSubscriber({

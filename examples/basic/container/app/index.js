@@ -2,9 +2,21 @@ import {useXS} from "xswr"
 import {getInfo} from "./api"
 
 export default () => {
-  const result = useXS("/api/info", url => {
-    return getInfo(url)
-  })
+  const result = useXS(
+    "/api/info",
+    url => {
+      return getInfo(url)
+    },
+    {
+      onSuccess: result => {
+        console.log("success ", result)
+      },
+      onError: err => {
+        console.log("err ", err)
+      },
+      shouldComponentUpdateAfterStateChange: false
+    }
+  )
 
   const {data} = result
 
