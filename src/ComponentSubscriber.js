@@ -164,11 +164,18 @@ export default class ComponentSubscriber {
   }
 
   addDeps(dep) {
-    const state = dep[USE_XSWR]
-    const index = this.deps.indexOf(state)
-    if (index === -1) {
-      this.deps.push(state)
-      state.addChild(this)
+    try {
+      const state = dep[USE_XSWR]
+      const index = this.deps.indexOf(state)
+      if (index === -1) {
+        this.deps.push(state)
+        state.addChild(this)
+      }
+    } catch (err) {
+      throw new Error(
+        "You are only allowed to assign a `useXS` return value as dependence" +
+          `please, check dep ${dep} again.`
+      )
     }
   }
 
