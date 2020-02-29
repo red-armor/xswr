@@ -51,9 +51,6 @@ proto.notifyData = function() {
     subscriber.resolve(data)
     remove()
   })
-
-  state.componentSubscribers = []
-  state.promiseSubscribers = []
 }
 
 proto.notifyError = function() {
@@ -168,7 +165,7 @@ export default ({key, fetch, fetchArgs}) => {
   })
 
   // 创建好fetcher就需要开始进行fetch了
-  _fetcher.validate()
+  // _fetcher.validate()
 
   return _fetcher
 }

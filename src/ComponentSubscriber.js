@@ -5,7 +5,16 @@ import {USE_XSWR} from "./commons"
 
 let count = 0
 export default class ComponentSubscriber {
-  constructor({updater, scope, fetch, fetchArgs, deps}) {
+  constructor({
+    updater,
+    scope,
+    fetch,
+    fetchArgs,
+    deps,
+    onError,
+    onSuccess,
+    shouldComponentUpdateAfterStateChange
+  }) {
     this.id = `component_subscriber_${count++}`
     this.deps = []
     this.updater = updater
@@ -19,8 +28,11 @@ export default class ComponentSubscriber {
     this.fetch = fetch
     this.fetchArgs = fetchArgs
 
-    this.handleDeps(deps)
+    this.onError = onError
+    this.onSuccess = onSuccess
+    this.shouldComponentUpdateAfterStateChange = shouldComponentUpdateAfterStateChange
 
+    this.handleDeps(deps)
     this.attemptToFetch()
   }
 
@@ -63,20 +75,38 @@ export default class ComponentSubscriber {
     this.remover = null
   }
 
-  handleUpdate(newData) {
-    if (!this.immediately && this.children.length) {
-      this.children.forEach(child => child.attemptToFetch())
-    }
+  shouldComponentUpdate() {
+    return this.shouldComponentUpdateAfterStateChange
+  }
 
+  handleUpdate(newData) {
     if (!equal(this.dataRef, newData)) {
       this.dataRef = newData
-      this.children.forEach(child => child.attemptToFetch())
-      this.updater()
+      this.children.forEach(child => {
+        child.attemptToFetch()
+      })
+      if (this.shouldComponentUpdate()) {
+        this.updater()
+      }
+
+      if (typeof this.onSuccess === "function") {
+        this.onSuccess(newData)
+      }
     }
   }
 
   handleError(err) {
-    this.scope.attemptToRetry()
+    if (this.scope.assertContinueRetry()) {
+      this.scope.attemptToRetry()
+    } else {
+      if (this.shouldComponentUpdate()) {
+        this.updater()
+      }
+
+      if (typeof this.onError === "function") {
+        this.onError(err)
+      }
+    }
   }
 
   attemptToFetch() {
@@ -88,6 +118,7 @@ export default class ComponentSubscriber {
         fetchArgs: this.fetchArgs,
         fetch: this.fetch
       })
+      this.fetcher.revalidate(this)
     }
   }
 

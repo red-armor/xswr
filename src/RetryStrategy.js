@@ -21,6 +21,7 @@ export default class RetryStrategy {
   }
 
   continueTick() {
+    this.maxCount--
     const tick = this.nextTick()
     if (tick) {
       this.timeoutHandler = setTimeout(() => {

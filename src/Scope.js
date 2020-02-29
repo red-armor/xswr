@@ -75,6 +75,10 @@ export default class Scope {
     }
   }
 
+  assertContinueRetry() {
+    return this.retryStrategy.maxCount > 0
+  }
+
   attemptToRetry() {
     if (this.mode == MODE.NORMAL || this.mode === MODE.POOL) {
       this.mode = MODE.RETRY

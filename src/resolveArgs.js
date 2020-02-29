@@ -11,8 +11,10 @@ const defaultConfig = {
 
   poolInterval: 0,
 
-  retryInterval: 3000,
-  retryMaxCount: 3
+  retryInterval: 1000,
+  retryMaxCount: 3,
+
+  shouldComponentUpdateAfterStateChange: true
 }
 
 export const buildKey = (url, params) => {
