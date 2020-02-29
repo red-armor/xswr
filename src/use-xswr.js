@@ -3,47 +3,51 @@ import store from "./store"
 import ComponentSubscriber from "./ComponentSubscriber"
 import resolveArgs from "./resolveArgs"
 import Scope from "./Scope"
+import {createHiddenProperty, USE_XSWR} from "./commons"
 
+const STATE = USE_XSWR
+
+// last one mayBe deps...
 export default (...args) => {
   const {fetchArgs, fetch, config} = resolveArgs(args)
-  const scopeRef = useRef(new Scope(config))
+
+  const scopeRef = useRef()
+  if (!scopeRef.current) {
+    scopeRef.current = new Scope(config)
+  }
 
   const [, setState] = useState(0)
   const updater = useCallback(() => setState(Date.now()), [])
 
-  const subscriberRef = useRef(
-    new ComponentSubscriber({
+  const subscriberRef = useRef()
+  if (!subscriberRef.current) {
+    subscriberRef.current = new ComponentSubscriber({
       updater,
       fetch,
       fetchArgs,
       scope: scopeRef.current
     })
-  )
-  store.currentComponentSubscriber = subscriberRef.current
+  }
 
-  useEffect(() => {
-    return () => subscriberRef.current.teardown()
-  }, [])
-
-  const resultRef = useRef(
-    Object.defineProperties(
-      {},
-      {
-        data: {
-          get() {
-            const {currentComponentSubscriber} = store
-            if (
-              currentComponentSubscriber &&
-              currentComponentSubscriber !== subscriberRef.current
-            ) {
-              subscriberRef.current.addDeps(currentBase)
-            }
-            return subscriberRef.current.getData()
-          }
+  const resultRef = useRef()
+  if (!useRef.current) {
+    resultRef.current = createHiddenProperty({}, STATE, subscriberRef.current)
+    Object.defineProperties(resultRef.current, {
+      data: {
+        get() {
+          return subscriberRef.current.getData()
         }
       }
-    )
-  )
+    })
+  }
+
+  store.setCurrent(subscriberRef.current)
+
+  useEffect(() => {
+    return () => {
+      subscriberRef.current.teardown()
+    }
+  }, [])
 
   return resultRef.current
 }

@@ -16,8 +16,12 @@ export default class PoolStrategy {
     }
   }
 
+  assertStartingPool() {
+    return false
+  }
+
   resumeTick() {
-    if (!shouldIStartPool) return
+    if (!this.assertStartingPool()) return
     this.timeoutHandler = setTimeout(() => {
       this.belongs.validate()
     })

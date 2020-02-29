@@ -1,12 +1,11 @@
 // Basically, Promise A+ compliant.
+import {
+  createHiddenProperty,
+  createHiddenProperties,
+  RESUMABLE_PROMISE
+} from "./commons"
 
-import {createHiddenProperty, createHiddenProperties} from "./commons"
-const hasSymbol = typeof Symbol !== "undefined" && Symbol.for
-
-const STATE = hasSymbol
-  ? Symbol.for("__resumable_promise_")
-  : "__resumable_promise_"
-
+const STATE = RESUMABLE_PROMISE
 const PENDING = 0
 const FULFILLED = 1
 const REJECTED = 2

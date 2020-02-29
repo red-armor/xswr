@@ -19,10 +19,10 @@ export default class RetryStrategy {
 
   resumeTick() {
     this.count = 0
-    const tick = this.retryStrategy.nextTick()
+    const tick = this.nextTick()
 
     this.timeoutHandler = setTimeout(() => {
-      this.subscriber.validate()
+      this.belongs.validate()
     }, tick)
   }
 

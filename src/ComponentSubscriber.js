@@ -1,10 +1,12 @@
 import equal from "deep-equal"
 import store from "./store"
+import {createHiddenProperty} from "./commons"
 
 let count = 0
 
 export default class ComponentSubscriber {
   constructor({updater, scope, fetch, fetchArgs}) {
+    this.id = `component_subscriber_${count++}`
     this.deps = []
     this.updater = updater
     this.removers = []
@@ -12,48 +14,49 @@ export default class ComponentSubscriber {
     this.parents = []
     this.scope = scope
 
-    this.dataRef = null
-    this.id = `component_subscriber_${count++}`
+    this.dataRef = Object.defineProperty({}, "__inner__", {
+      value: this,
+      writable: false,
+      enumerable: false,
+      configurable: false
+    })
 
     this.fetch = fetch
     this.fetchArgs = fetchArgs
 
+    store.setCurrent(this)
     this.attemptToFetch()
   }
 
   generateKey() {
-    let keyArgs = this.fetchArgs
-
-    if (typeof keyArgs[0] === "function") {
+    let parts
+    if (typeof this.fetchArgs[0] === "function") {
       try {
-        args = keyArgs[0].call(null)
-        this.keyArgs = args
+        parts = this.fetchArgs[0].call(null)
+        this.fetchArgs = parts
       } catch (err) {
+        console.log("err ", err)
         // do nothing..
       }
+    } else {
+      parts = this.fetchArgs
     }
 
-    const key = JSON.stringify(keyArgs)
-
-    if (typeof key === "string" || Array.isArray(key)) {
-      this.fetcher = store.getFetcher({
-        key,
-        fetch: this.fetch,
-        fetchArgs: this.fetchArgs
-      })
-    }
+    const key = JSON.stringify(parts)
+    return key
   }
 
   // If not has fetch, which means parents is not resolved, then return undefined.
   getData() {
-    store.currentComponentSubscriber = this
+    store.setCurrent(this)
+
     if (!this.fetcher) {
       if (this.parents.length) this.attemptToFetch()
       else throw new Error("Maybe you are using async method to get key")
       return
     }
 
-    return this.fetcher.getData(this)
+    return (this.dataRef = this.fetcher.getData(this))
   }
 
   teardown() {
