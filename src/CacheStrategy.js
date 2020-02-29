@@ -11,6 +11,7 @@ export default class CacheStrategy {
 
     const now = Date.now()
     const delta = now - lastUpdatedMS
+
     if (delta < 0) return false
 
     if (this.immediately) {

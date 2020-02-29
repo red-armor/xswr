@@ -73,7 +73,7 @@ export default class ComponentSubscriber {
       if (this.scope.assertContinueRetry()) {
         return null
       } else {
-        return this.fetcher.error
+        return this.fetcher.getProp("error")
       }
     }
 
@@ -82,8 +82,12 @@ export default class ComponentSubscriber {
 
   getIsValidating() {
     const shouldRevalidating =
-      this.fetcher.hasError && this.scope.assertContinueRetry()
+      this.fetcher.getProp("hasError") && this.scope.assertContinueRetry()
     return this.fetcher.assertValidating() || shouldRevalidating
+  }
+
+  getIsPooling() {
+    return this.scope.assertPooling()
   }
 
   clearPooling() {
@@ -144,8 +148,8 @@ export default class ComponentSubscriber {
         fetchArgs: this.fetchArgs,
         fetch: this.fetch
       })
-      this.fetcher.revalidate(this)
     }
+    this.fetcher.revalidate(this)
   }
 
   addChild(child) {
@@ -168,7 +172,7 @@ export default class ComponentSubscriber {
     }
   }
 
-  revalidate() {
-    this.fetcher.revalidate(this)
+  forceRevalidate() {
+    this.fetcher.forceRevalidate(this)
   }
 }

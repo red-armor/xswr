@@ -13,6 +13,7 @@ export const getInfo = (url, params) => {
               location: "shanghai"
             }
           ],
+          ts: Date.now(),
           success: true
         })
       }, 1000)
@@ -29,6 +30,7 @@ export const getInfo = (url, params) => {
       setTimeout(() => {
         resolve({
           data: list[city],
+          ts: Date.now(),
           success: true
         })
       }, 1000)

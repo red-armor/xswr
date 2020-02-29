@@ -7,6 +7,11 @@ const findIndex = (subscribers, subscriber) => {
   return subscribers.findIndex(({subscriber: o}) => o.id === subscriber.id)
 }
 
+proto.getProp = function(prop) {
+  const state = this[STATE]
+  return state[prop]
+}
+
 proto.addComponentSubscriber = function(subscriber) {
   const state = this[STATE]
   const index = findIndex(state.componentSubscribers, subscriber)
@@ -100,15 +105,32 @@ proto.validate = function() {
   )
 }
 
+/**
+ * Do not care about cache is valid or not..Normally, it's used for pooling or
+ * retry...
+ */
+proto.forceRevalidate = function(subscriber) {
+  // If there has ongoing request, bind `onFulfilled` and `onReject`
+  if (this.assertValidating()) {
+    this.addComponentSubscriber(subscriber)
+  } else {
+    // If there is not ongoing request, check its validation.
+    this.addComponentSubscriber(subscriber)
+    this.validate()
+  }
+}
+
 proto.revalidate = function(subscriber) {
   const {
     scope: {cacheStrategy}
   } = subscriber
+  const state = this[STATE]
+  const {lastUpdatedMS} = state
 
   // If there has ongoing request, bind `onFulfilled` and `onReject`
   if (this.assertValidating()) {
     this.addComponentSubscriber(subscriber)
-  } else if (!cacheStrategy.canIUseCache()) {
+  } else if (!cacheStrategy.canIUseCache(lastUpdatedMS)) {
     // If there is not ongoing request, check its validation.
     this.addComponentSubscriber(subscriber)
     this.validate()
@@ -129,13 +151,14 @@ proto.handlePromise = function(subscriber) {
   const {
     scope: {cacheStrategy}
   } = subscriber
-  const {data} = state
+  const {data, lastUpdatedMS} = state
+
   // If there has data, return first
   if (data) subscriber.resolve(data)
   // If there has ongoing request, bind `onFulfilled` and `onReject`
   if (this.assertValidating()) {
     this.addPromiseSubscriber(subscriber)
-  } else if (!cacheStrategy.canIUseCache()) {
+  } else if (!cacheStrategy.canIUseCache(lastUpdatedMS)) {
     // If there is not ongoing request, check its validation.
     this.addPromiseSubscriber(subscriber)
     this.validate()
@@ -165,9 +188,6 @@ export default ({key, fetch, fetchArgs}) => {
     error: null,
     lastUpdatedMS: null
   })
-
-  // 创建好fetcher就需要开始进行fetch了
-  // _fetcher.validate()
 
   return _fetcher
 }

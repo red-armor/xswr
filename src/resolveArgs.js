@@ -39,9 +39,13 @@ export default args => {
   let config = {}
 
   const last = args[len - 1]
+  const secondLast = args[len - 2]
 
   if (Array.isArray(last)) {
     deps = last
+    if (toString(secondLast) === "[object Object]") {
+      config = secondLast
+    }
   } else if (toString(last) === "[object Object]") {
     config = last
   }

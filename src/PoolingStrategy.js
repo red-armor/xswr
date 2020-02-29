@@ -17,9 +17,11 @@ export default class PoolingStrategy {
   }
 
   resumeTick() {
-    this.timeoutHandler = setTimeout(() => {
-      this.belongs.revalidate()
-    })
+    if (this.interval > 0) {
+      this.timeoutHandler = setTimeout(() => {
+        this.belongs.forceRevalidate()
+      }, this.interval)
+    }
   }
 
   cleanup() {
