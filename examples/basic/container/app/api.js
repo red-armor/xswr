@@ -1,7 +1,12 @@
+let count = 0
 export const getInfo = (url, params) => {
   if (url === "/api/info") {
     return new Promise((resolve, reject) => {
       setTimeout(() => {
+        if (count++ < 3) {
+          reject(new Error("testing"))
+        }
+
         resolve({
           data: [
             {

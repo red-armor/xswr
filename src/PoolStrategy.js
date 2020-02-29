@@ -1,8 +1,8 @@
 export default class PoolStrategy {
-  constructor({poolInterval}) {
+  constructor({interval}) {
     this.belongs = null
     this.timeoutHandler = null
-    this.interval = poolInterval
+    this.interval = interval
   }
 
   bind(subscriber) {

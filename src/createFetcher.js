@@ -3,10 +3,17 @@ import {createHiddenProperty, createHiddenProperties, STATE} from "./commons"
 function fetcher() {}
 const proto = fetcher.prototype
 
+const findIndex = (subscribers, subscriber) => {
+  return subscribers.findIndex(({subscriber: o}) => o.id === subscriber.id)
+}
+
 proto.addComponentSubscriber = function(subscriber) {
   const state = this[STATE]
+  const index = findIndex(state.componentSubscribers, subscriber)
+  if (index !== -1) return
+
   subscriber.remover = () => {
-    const index = state.componentSubscribers.indexOf(subscriber)
+    const index = findIndex(state.componentSubscribers, subscriber)
     if (index !== -1) state.componentSubscribers.splice(index, 1)
   }
   state.componentSubscribers.push({
@@ -17,8 +24,11 @@ proto.addComponentSubscriber = function(subscriber) {
 
 proto.addPromiseSubscriber = function(subscriber) {
   const state = this[STATE]
+  const index = findIndex(state.promiseSubscribers, subscriber)
+  if (index !== -1) return
+
   subscriber.remover = () => {
-    const index = state.promiseSubscribers.indexOf(subscriber)
+    const index = findIndex(state.promiseSubscribers, subscriber)
     if (index !== -1) state.promiseSubscribers.splice(index, 1)
   }
   state.promiseSubscribers.push({
@@ -41,6 +51,9 @@ proto.notifyData = function() {
     subscriber.resolve(data)
     remove()
   })
+
+  state.componentSubscribers = []
+  state.promiseSubscribers = []
 }
 
 proto.notifyError = function() {
@@ -49,7 +62,7 @@ proto.notifyError = function() {
 
   // notify subscriber
   componentSubscribers.forEach(({subscriber, remove}) => {
-    subscriber.handleError(data)
+    subscriber.handleError(error)
     remove()
   })
 
@@ -88,14 +101,11 @@ proto.validate = function() {
   )
 }
 
-proto.getData = function(subscriber) {
-  const state = this[STATE]
+proto.revalidate = function(subscriber) {
   const {
     scope: {cacheStrategy}
   } = subscriber
-  const {data} = state
-  // If there has data, return first
-  if (data) return data
+
   // If there has ongoing request, bind `onFulfilled` and `onReject`
   if (this.assertValidating()) {
     this.addComponentSubscriber(subscriber)
@@ -104,6 +114,15 @@ proto.getData = function(subscriber) {
     this.addComponentSubscriber(subscriber)
     this.validate()
   }
+}
+
+proto.getData = function(subscriber) {
+  const state = this[STATE]
+
+  const {data} = state
+  // If there has data, return first
+  if (data) return data
+  this.revalidate(subscriber)
 }
 
 proto.handlePromise = function(subscriber) {
