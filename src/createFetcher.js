@@ -29,10 +29,10 @@ proto.addPromiseSubscriber = function(subscriber) {
 
 proto.notifyData = function() {
   const state = this[STATE]
-  const {data, promiseSubscribers, subscribers} = state
+  const {data, promiseSubscribers, componentSubscribers} = state
 
   // notify subscriber
-  state.componentSubscribers.forEach(({subscriber, remove}) => {
+  componentSubscribers.forEach(({subscriber, remove}) => {
     subscriber.handleUpdate(data)
     remove()
   })
@@ -45,10 +45,10 @@ proto.notifyData = function() {
 
 proto.notifyError = function() {
   const state = this[STATE]
-  const {error, promiseSubscribers, subscribers} = state
+  const {error, promiseSubscribers, componentSubscribers} = state
 
   // notify subscriber
-  state.componentSubscribers.forEach(({subscriber, remove}) => {
+  componentSubscribers.forEach(({subscriber, remove}) => {
     subscriber.handleError(data)
     remove()
   })

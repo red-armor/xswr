@@ -22,6 +22,10 @@ class Store {
     const key = fetcher.getProp("key")
     this.fetchers[key] = fetcher
   }
+
+  setCurrent(subscriber) {
+    this.currentComponentSubscriber = subscriber
+  }
 }
 
 export default new Store()
