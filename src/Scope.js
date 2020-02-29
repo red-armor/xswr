@@ -18,6 +18,8 @@ export default class Scope {
 
       stopIfResultEqual,
 
+      poolInterval,
+
       errorRetryInterval
     } = config
 

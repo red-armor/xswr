@@ -1,38 +1,46 @@
 import equal from "deep-equal"
+import store from "./store"
 
 let count = 0
 
 export default class ComponentSubscriber {
-  constructor({update, scope, key, fetch, fetchArgs}) {
+  constructor({updater, scope, fetch, fetchArgs}) {
     this.deps = []
-    this.update = update
+    this.updater = updater
     this.removers = []
     this.immediately = true
     this.parents = []
     this.scope = scope
 
     this.dataRef = null
-    this.key = key
     this.id = `component_subscriber_${count++}`
 
     this.fetch = fetch
     this.fetchArgs = fetchArgs
+
+    this.attemptToFetch()
   }
 
   generateKey() {
-    let keyArgs = this.key
+    let keyArgs = this.fetchArgs
 
-    if (typeof keyArgs === "function") {
+    if (typeof keyArgs[0] === "function") {
       try {
-        keyArgs = key.call(null)
+        args = keyArgs[0].call(null)
+        this.keyArgs = args
       } catch (err) {
         // do nothing..
       }
     }
 
-    if (typeof keyArgs === "string" || Array.isArray(keyArgs)) {
-      const stateFetcher = store.getFetcher({keyArgs, fetchArgs, fetch})
-      subscriberRef.current.bindFetcher(stateFetcher)
+    const key = JSON.stringify(keyArgs)
+
+    if (typeof key === "string" || Array.isArray(key)) {
+      this.fetcher = store.getFetcher({
+        key,
+        fetch: this.fetch,
+        fetchArgs: this.fetchArgs
+      })
     }
   }
 
@@ -40,7 +48,7 @@ export default class ComponentSubscriber {
   getData() {
     store.currentComponentSubscriber = this
     if (!this.fetcher) {
-      if (this.parents.length) this.attemptBeforeKeyReady()
+      if (this.parents.length) this.attemptToFetch()
       else throw new Error("Maybe you are using async method to get key")
       return
     }
@@ -57,18 +65,21 @@ export default class ComponentSubscriber {
     this.removers.push(remove)
   }
 
-  triggerUpdate(newData) {
+  handleUpdate(newData) {
     if (!this.immediately && this.deps.length) {
-      this.deps.forEach(dep => dep.start())
+      this.deps.forEach(dep => dep.attemptToFetch())
     }
 
     if (!equal(this.dataRef, newData)) {
       this.dataRef = newData
-      this.deps.forEach(dep => dep.start())
+      this.deps.forEach(dep => dep.attemptToFetch())
+      this.updater()
     }
   }
 
-  attemptBeforeKeyReady() {
+  handleError(err) {}
+
+  attemptToFetch() {
     if (this.fetcher) return
     const keyArgs = this.generateKey()
     if (!keyArgs) return // not ready
@@ -79,11 +90,18 @@ export default class ComponentSubscriber {
     })
   }
 
+  addParent(parent) {
+    const index = this.parents.indexOf(parent)
+    if (index === -1) {
+      this.parents.push(parent)
+    }
+  }
+
   addDeps(dep) {
     const index = this.deps.indexOf(dep)
     if (index === -1) {
       this.deps.push(dep)
-      dep.parent = this
+      dep.addParent(this)
     }
   }
 }
