@@ -3,6 +3,7 @@ import createFetcher from "./createFetcher"
 class Store {
   constructor() {
     this.fetchers = {}
+    this.currentComponentSubscriber = null
   }
 
   getFetcher({key, fetch, fetchArgs, config}) {

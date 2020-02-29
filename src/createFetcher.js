@@ -3,6 +3,18 @@ import {createHiddenProperty, createHiddenProperties, STATE} from "./commons"
 function fetcher() {}
 const proto = fetcher.prototype
 
+proto.addComponentSubscriber = function(subscriber) {
+  const state = this[STATE]
+  subscriber.remover = () => {
+    const index = state.componentSubscribers.indexOf(subscriber)
+    if (index !== -1) state.componentSubscribers.splice(index, 1)
+  }
+  state.componentSubscribers.push({
+    subscriber,
+    remove: () => subscriber.teardown()
+  })
+}
+
 proto.addPromiseSubscriber = function(subscriber) {
   const state = this[STATE]
   subscriber.remover = () => {
@@ -15,37 +27,20 @@ proto.addPromiseSubscriber = function(subscriber) {
   })
 }
 
-proto.addSubscriber = function(subscriber) {
-  const state = this[STATE]
-  if (state("finalized")) return
-
-  // run fetch immediately
-  state.subscribers.push(subscriber)
-  subscriber.addRemover(() => {
-    const index = state.subscribers.indexOf(subscriber)
-    if (index !== -1) state.subscribers.splice(index, 1)
-  })
-}
-
-proto.update = function() {
-  const state = this[STATE]
-  state.subscribers.forEach(subscriber => subscriber.triggerUpdate())
-}
-
 proto.notifyData = function() {
   const state = this[STATE]
   const {data, promiseSubscribers, subscribers} = state
 
   // notify subscriber
-  // state.subscribers.forEach(subscriber => subscriber.triggerUpdate())
-  // state.subscribers = []
+  state.componentSubscribers.forEach(({subscriber, remove}) => {
+    subscriber.triggerUpdate(data)
+    remove()
+  })
 
   promiseSubscribers.forEach(({subscriber, remove}) => {
     subscriber.resolve(data)
     remove()
   })
-  // 是否对promiseSubscribers进行操作，需要业务自己实现，比如有可能A需要对请求进行pool
-  // 而B并不需要
 }
 
 proto.notifyError = function() {
@@ -91,13 +86,22 @@ proto.validate = function() {
   )
 }
 
-proto.getData = function(prop) {
+proto.getData = function(subscriber) {
   const state = this[STATE]
-  const {data, cacheStrategy} = state
-
+  const {
+    scope: {cacheStrategy}
+  } = subscriber
+  const {data} = state
+  // If there has data, return first
   if (data) return data
-  if (this.assertValidating()) promise.then(onFulfilled, onReject)
-  else if (!cacheStrategy.canIUseCache()) this.validate()
+  // If there has ongoing request, bind `onFulfilled` and `onReject`
+  if (this.assertValidating()) {
+    this.addComponentSubscriber(subscriber)
+  } else if (!cacheStrategy.canIUseCache()) {
+    // If there is not ongoing request, check its validation.
+    this.addComponentSubscriber(subscriber)
+    this.validate()
+  }
 }
 
 proto.handlePromise = function(subscriber) {
@@ -129,9 +133,9 @@ export default ({key, fetch, fetchArgs}) => {
 
     data: null,
     deps: [],
-    subscribers: [],
     isRevoked: false,
     finalized: false,
+    componentSubscribers: [],
 
     promise: null,
     promiseSubscribers: [],

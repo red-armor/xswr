@@ -1,12 +1,15 @@
+let count = 0
+
 import ResumablePromise from "./ResumablePromise"
 
 export default class PromiseSubscriber {
   constructor({fetcher, scope}) {
-    this.promise = new ResumablePromise()
+    this.id = `promise_subscriber_${count++}`
     this.fetcher = fetcher
     this.scope = scope
     this.scope.bind(this)
     this.remover = null
+    this.promise = new ResumablePromise()
 
     this.fetcher.handlePromise(this)
   }
