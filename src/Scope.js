@@ -1,5 +1,5 @@
 import CacheStrategy from "./CacheStrategy"
-import PoolStrategy from "./PoolStrategy"
+import PoolingStrategy from "./PoolingStrategy"
 import RetryStrategy from "./RetryStrategy"
 
 const MODE = {
@@ -18,7 +18,7 @@ export default class Scope {
 
       stopIfResultEqual,
 
-      poolInterval,
+      poolingInterval,
 
       retryInterval,
       retryMaxCount
@@ -31,8 +31,8 @@ export default class Scope {
       staleWhileRevalidateMS
     })
 
-    this.poolStrategy = new PoolStrategy({
-      interval: poolInterval
+    this.poolingStrategy = new PoolingStrategy({
+      interval: poolingInterval
     })
 
     this.retryStrategy = new RetryStrategy({
@@ -52,13 +52,13 @@ export default class Scope {
 
   bind(subscriber) {
     this.belongs = subscriber
-    this.poolStrategy.belongs = subscriber
+    this.poolingStrategy.belongs = subscriber
     this.retryStrategy.belongs = subscriber
   }
 
   assertResultEqual(newResult) {
     this.cleanup()
-    this.attemptToPool()
+    this.attemptToPooling()
     if (!this.stopIfResultEqual) return false
     return true
   }
@@ -68,11 +68,14 @@ export default class Scope {
     return false
   }
 
-  attemptToPool() {
+  attemptToPooling() {
+    if (this.poolingStrategy.interval <= 0) return
+
     if (this.mode == MODE.NORMAL || this.mode === MODE.RETRY) {
       this.mode = MODE.POOL
-      this.poolStrategy.resumeTick()
     }
+
+    this.poolingStrategy.resumeTick()
   }
 
   assertContinueRetry() {
@@ -80,6 +83,10 @@ export default class Scope {
   }
 
   attemptToRetry() {
+    if (this.mode === MODE.POOL) {
+      this.poolingStrategy.suspense()
+    }
+
     if (this.mode == MODE.NORMAL || this.mode === MODE.POOL) {
       this.mode = MODE.RETRY
       this.retryStrategy.resumeTick()
@@ -89,7 +96,7 @@ export default class Scope {
   }
 
   cleanup() {
-    this.poolStrategy.cleanup()
+    this.poolingStrategy.cleanup()
     this.retryStrategy.cleanup()
   }
 }

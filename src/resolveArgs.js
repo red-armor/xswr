@@ -2,14 +2,14 @@ import {toString} from "./commons"
 
 const defaultConfig = {
   immediately: false,
-  poolInterval: 0,
+  poolingInterval: 0,
 
   // for cache strategy usage
   maxAge: 0,
   minThresholdMS: 300,
   staleWhileRevalidateMS: 5 * 60 * 1000,
 
-  poolInterval: 0,
+  poolingInterval: 0,
 
   retryInterval: 1000,
   retryMaxCount: 3,

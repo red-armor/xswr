@@ -48,6 +48,21 @@ export default (...args) => {
         get() {
           return subscriberRef.current.getData()
         }
+      },
+      error: {
+        get() {
+          return subscriberRef.current.getError()
+        }
+      },
+      isValidating: {
+        get() {
+          return subscriberRef.current.getIsValidating()
+        }
+      },
+      clearPooling: {
+        get() {
+          return subscriberRef.current.clearPooling.bind(subscriberRef.current)
+        }
       }
     })
   }

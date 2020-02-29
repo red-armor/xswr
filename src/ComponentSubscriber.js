@@ -68,6 +68,28 @@ export default class ComponentSubscriber {
     return this.fetcher.getData(this)
   }
 
+  getError() {
+    if (this.fetcher.hasError) {
+      if (this.scope.assertContinueRetry()) {
+        return null
+      } else {
+        return this.fetcher.error
+      }
+    }
+
+    return null
+  }
+
+  getIsValidating() {
+    const shouldRevalidating =
+      this.fetcher.hasError && this.scope.assertContinueRetry()
+    return this.fetcher.assertValidating() || shouldRevalidating
+  }
+
+  clearPooling() {
+    this.scope.poolingStrategy.destroy()
+  }
+
   teardown() {
     if (typeof this.remover === "function") {
       this.remover()
@@ -93,6 +115,8 @@ export default class ComponentSubscriber {
         this.onSuccess(newData)
       }
     }
+
+    this.scope.attemptToPooling()
   }
 
   handleError(err) {
@@ -106,6 +130,8 @@ export default class ComponentSubscriber {
       if (typeof this.onError === "function") {
         this.onError(err)
       }
+
+      this.scope.attemptToPooling()
     }
   }
 
@@ -122,10 +148,10 @@ export default class ComponentSubscriber {
     }
   }
 
-  addChild(parent) {
-    const index = this.children.indexOf(parent)
+  addChild(child) {
+    const index = this.children.indexOf(child)
     if (index === -1) {
-      this.children.push(parent)
+      this.children.push(child)
     }
   }
 

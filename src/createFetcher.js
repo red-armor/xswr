@@ -85,6 +85,8 @@ proto.validate = function() {
     data => {
       state.data = data
       state.lastUpdatedMS = Date.now()
+      state.error = null
+      state.hasError = false
       state.finalized = true
       this.notifyData()
     },

@@ -1,4 +1,4 @@
-export default class PoolStrategy {
+export default class PoolingStrategy {
   constructor({interval}) {
     this.belongs = null
     this.timeoutHandler = null
@@ -16,14 +16,9 @@ export default class PoolStrategy {
     }
   }
 
-  assertStartingPool() {
-    return false
-  }
-
   resumeTick() {
-    if (!this.assertStartingPool()) return
     this.timeoutHandler = setTimeout(() => {
-      this.belongs.validate()
+      this.belongs.revalidate()
     })
   }
 
@@ -32,5 +27,10 @@ export default class PoolStrategy {
       clearTimeout(this.timeoutHandler)
       this.timeoutHandler = null
     }
+  }
+
+  destroy() {
+    this.cleanup()
+    this.interval = 0
   }
 }
