@@ -1,4 +1,3 @@
-import React from "react"
 import {useXS} from "xswr"
 import {getInfo} from "./api"
 
@@ -6,16 +5,18 @@ export default () => {
   const result = useXS("/api/info", url => {
     return getInfo(url)
   })
+
   const {data} = result
 
   // won't run until data is ready...
-  const {city} = useXS(
+  const city = useXS(
     () => {
-      console.log("hello")
-      return ["/api/city", {city: data[0].location}]
+      const {data} = result
+      console.log("result ", result)
+      return ["/api/city", {city: data.data[0].location}]
     },
-    args => {
-      const [url, params] = args
+    (url, params) => {
+      console.log("get ", url, params)
       return getInfo(url, params)
     },
     [result]

@@ -53,7 +53,7 @@ export default class ComponentSubscriber {
       return
     }
 
-    return (this.dataRef = this.fetcher.getData(this))
+    return this.fetcher.getData(this)
   }
 
   teardown() {
@@ -66,13 +66,13 @@ export default class ComponentSubscriber {
   }
 
   handleUpdate(newData) {
-    if (!this.immediately && this.deps.length) {
-      this.deps.forEach(dep => dep.attemptToFetch())
+    if (!this.immediately && this.children.length) {
+      this.children.forEach(child => child.attemptToFetch())
     }
 
     if (!equal(this.dataRef, newData)) {
       this.dataRef = newData
-      this.deps.forEach(dep => dep.attemptToFetch())
+      this.children.forEach(child => child.attemptToFetch())
       this.updater()
     }
   }
@@ -80,14 +80,15 @@ export default class ComponentSubscriber {
   handleError(err) {}
 
   attemptToFetch() {
-    if (this.fetcher) return
-    const keyArgs = this.generateKey()
-    if (!keyArgs) return // not ready
-    this.fetcher = store.getFetcher({
-      keyArgs,
-      fetchArgs: this.fetchArgs,
-      fetch: this.fetch
-    })
+    if (!this.fetcher) {
+      const key = this.generateKey()
+      if (!key) return
+      this.fetcher = store.getFetcher({
+        key,
+        fetchArgs: this.fetchArgs,
+        fetch: this.fetch
+      })
+    }
   }
 
   addChild(parent) {
