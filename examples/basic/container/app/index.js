@@ -14,7 +14,8 @@ export default () => {
       onError: err => {
         console.log("err ", err)
       },
-      shouldComponentUpdateAfterStateChange: false
+      shouldComponentUpdateAfterStateChange: false,
+      poolingInterval: 1000
     }
   )
 
