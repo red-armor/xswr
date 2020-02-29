@@ -19,7 +19,7 @@ export default () => {
     }
   )
 
-  const {data} = result
+  const {data, isValidating, error} = result
 
   // won't run until data is ready...
   const city = useXS(
@@ -31,8 +31,15 @@ export default () => {
     (url, params) => {
       return getInfo(url, params)
     },
+    {
+      staleWhileRevalidateMS: 1000
+    },
+
     [result]
   )
-  console.log("data ", data, city.data, result)
+
+  console.log("result ", data, isValidating, error)
+  console.log("city ", city.data)
+
   return null
 }

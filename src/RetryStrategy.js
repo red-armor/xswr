@@ -25,7 +25,7 @@ export default class RetryStrategy {
     const tick = this.nextTick()
     if (tick) {
       this.timeoutHandler = setTimeout(() => {
-        this.belongs.revalidate()
+        this.belongs.forceRevalidate()
       }, tick)
     }
   }

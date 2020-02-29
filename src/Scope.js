@@ -87,12 +87,16 @@ export default class Scope {
       this.poolingStrategy.suspense()
     }
 
-    if (this.mode == MODE.NORMAL || this.mode === MODE.POOL) {
+    if (this.mode === MODE.NORMAL || this.mode === MODE.POOL) {
       this.mode = MODE.RETRY
       this.retryStrategy.resumeTick()
     } else {
       this.retryStrategy.continueTick()
     }
+  }
+
+  assertPooling() {
+    return this.mode === MODE.POOL
   }
 
   cleanup() {

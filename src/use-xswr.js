@@ -63,6 +63,11 @@ export default (...args) => {
         get() {
           return subscriberRef.current.clearPooling.bind(subscriberRef.current)
         }
+      },
+      isPooling: {
+        get() {
+          return subscriberRef.current.getIsPooling()
+        }
       }
     })
   }
