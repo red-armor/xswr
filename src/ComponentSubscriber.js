@@ -1,9 +1,8 @@
 import equal from "deep-equal"
 import store from "./store"
-import {createHiddenProperty} from "./commons"
+import {buildKey} from "./resolveArgs"
 
 let count = 0
-
 export default class ComponentSubscriber {
   constructor({updater, scope, fetch, fetchArgs}) {
     this.id = `component_subscriber_${count++}`
@@ -13,13 +12,7 @@ export default class ComponentSubscriber {
     this.immediately = true
     this.parents = []
     this.scope = scope
-
-    this.dataRef = Object.defineProperty({}, "__inner__", {
-      value: this,
-      writable: false,
-      enumerable: false,
-      configurable: false
-    })
+    this.dataRef = null
 
     this.fetch = fetch
     this.fetchArgs = fetchArgs
@@ -29,7 +22,8 @@ export default class ComponentSubscriber {
   }
 
   generateKey() {
-    let parts
+    let parts = []
+    let key
     if (typeof this.fetchArgs[0] === "function") {
       try {
         parts = this.fetchArgs[0].call(null)
@@ -42,7 +36,10 @@ export default class ComponentSubscriber {
       parts = this.fetchArgs
     }
 
-    const key = JSON.stringify(parts)
+    if (parts.length) {
+      key = buildKey(parts[0], parts[1])
+    }
+
     return key
   }
 

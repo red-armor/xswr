@@ -20,6 +20,6 @@ export default () => {
     },
     [result]
   )
-  console.log("data ", data, city)
+  console.log("data ", data, city, result)
   return null
 }
