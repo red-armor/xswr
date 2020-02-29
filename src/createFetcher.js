@@ -109,7 +109,7 @@ proto.validate = function() {
  * Do not care about cache is valid or not..Normally, it's used for pooling or
  * retry...
  */
-proto.forceRevalidate = function(subscriber) {
+proto.forceComponentRevalidate = function(subscriber) {
   // If there has ongoing request, bind `onFulfilled` and `onReject`
   if (this.assertValidating()) {
     this.addComponentSubscriber(subscriber)
@@ -144,6 +144,21 @@ proto.getData = function(subscriber) {
   // If there has data, return first
   if (data) return data
   this.revalidate(subscriber)
+}
+
+/**
+ * Do not care about cache is valid or not..Normally, it's used for pooling or
+ * retry...
+ */
+proto.forcePromiseRevalidate = function(subscriber) {
+  // If there has ongoing request, bind `onFulfilled` and `onReject`
+  if (this.assertValidating()) {
+    this.addPromiseSubscriber(subscriber)
+  } else {
+    // If there is not ongoing request, check its validation.
+    this.addPromiseSubscriber(subscriber)
+    this.validate()
+  }
 }
 
 proto.handlePromise = function(subscriber) {

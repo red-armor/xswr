@@ -180,6 +180,6 @@ export default class ComponentSubscriber {
   }
 
   forceRevalidate() {
-    this.fetcher.forceRevalidate(this)
+    this.fetcher.forceComponentRevalidate(this)
   }
 }

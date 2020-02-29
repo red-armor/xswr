@@ -56,18 +56,6 @@ export default class Scope {
     this.retryStrategy.belongs = subscriber
   }
 
-  assertResultEqual(newResult) {
-    this.cleanup()
-    this.attemptToPooling()
-    if (!this.stopIfResultEqual) return false
-    return true
-  }
-
-  assertErrorEqual(error) {
-    this.cleanup()
-    return false
-  }
-
   attemptToPooling() {
     if (this.poolingStrategy.interval <= 0) return
 

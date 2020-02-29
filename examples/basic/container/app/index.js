@@ -1,45 +1,57 @@
-import {useXS} from "xswr"
+import {useXS, xs} from "xswr"
 import {getInfo} from "./api"
 
 export default () => {
-  const result = useXS(
-    "/api/info",
-    url => {
-      return getInfo(url)
+  // const result = useXS(
+  //   "/api/info",
+  //   url => {
+  //     return getInfo(url)
+  //   },
+  //   {
+  //     onSuccess: result => {
+  //       console.log("success ", result)
+  //     },
+  //     onError: err => {
+  //       console.log("err ", err)
+  //     },
+  //     shouldComponentUpdateAfterStateChange: false,
+  //     poolingInterval: 1000
+  //   }
+  // )
+
+  // const {data, isValidating, error} = result
+
+  // // won't run until data is ready...
+  // const city = useXS(
+  //   () => {
+  //     const {data} = result
+  //     console.log("result ", result)
+  //     return ["/api/city", {city: data.data[0].location}]
+  //   },
+  //   (url, params) => {
+  //     return getInfo(url, params)
+  //   },
+  //   {
+  //     staleWhileRevalidateMS: 1000
+  //   },
+
+  //   [result]
+  // )
+
+  // console.log("result ", data, isValidating, error)
+  // console.log("city ", city.data)
+
+  xs("/api/info", url => {
+    // return getInfo(url)
+    return Promise.reject(new Error("failed"))
+  }).then(
+    result => {
+      console.log("result ", result)
     },
-    {
-      onSuccess: result => {
-        console.log("success ", result)
-      },
-      onError: err => {
-        console.log("err ", err)
-      },
-      shouldComponentUpdateAfterStateChange: false,
-      poolingInterval: 1000
+    err => {
+      console.log("errxxxxx ", err)
     }
   )
-
-  const {data, isValidating, error} = result
-
-  // won't run until data is ready...
-  const city = useXS(
-    () => {
-      const {data} = result
-      console.log("result ", result)
-      return ["/api/city", {city: data.data[0].location}]
-    },
-    (url, params) => {
-      return getInfo(url, params)
-    },
-    {
-      staleWhileRevalidateMS: 1000
-    },
-
-    [result]
-  )
-
-  console.log("result ", data, isValidating, error)
-  console.log("city ", city.data)
 
   return null
 }
