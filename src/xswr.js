@@ -4,9 +4,11 @@ import PromiseSubscriber from "./PromiseSubscriber"
 import store from "./store"
 import resolveArgs from "./resolveArgs"
 import Scope from "./Scope"
+import {buildKey} from "./resolveArgs"
 
 export default (...args) => {
-  const {config, key, fetchArgs, fetch} = resolveArgs(args)
+  const {config, fetchArgs, fetch} = resolveArgs(args)
+  const key = buildKey(fetchArgs[0], fetchArgs[1])
   const stateFetcher = store.getFetcher({key, fetchArgs, fetch})
   const scope = new Scope(config)
 
