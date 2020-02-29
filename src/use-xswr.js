@@ -1,27 +1,30 @@
 import {useEffect, useCallback, useState, useRef} from "react"
 import store from "./store"
-import Base from "./Base"
+import ComponentSubscriber from "./ComponentSubscriber"
 import resolveArgs from "./resolveArgs"
 import Scope from "./Scope"
 
 export default (...args) => {
   const {key, fetchArgs, fetch, config} = resolveArgs(args)
-  const stateFetcher = store.getFetcher({key, fetchArgs, fetch})
+  const scopeRef = useRef(new Scope(config))
+
   const [, setState] = useState(0)
-  const scope = new Scope(config)
-  const update = useCallback(() => setState(Date.now()), [])
-  const base = useRef(
-    new Base({
-      update,
-      scope,
-      fetcher: stateFetcher
+  const updater = useCallback(() => setState(Date.now()), [])
+
+  const subscriberRef = useRef(
+    new ComponentSubscriber({
+      key,
+      updater,
+      fetch,
+      fetchArgs,
+      scope: scopeRef.current
     })
   )
+  store.currentComponentSubscriber = subscriberRef.current
 
   useEffect(() => {
-    stateFetcher.addSubscriber(base.current)
-    return () => base.current.teardown()
-  }, [stateFetcher.getProp("finalized")])
+    return () => subscriberRef.current.teardown()
+  }, [])
 
   const resultRef = useRef(
     Object.defineProperties(
@@ -29,11 +32,14 @@ export default (...args) => {
       {
         data: {
           get() {
-            const {currentBase} = store
-            if (currentBase && currentBase !== base) {
-              base.current.addDeps(currentBase)
+            const {currentComponentSubscriber} = store
+            if (
+              currentComponentSubscriber &&
+              currentComponentSubscriber !== subscriberRef.current
+            ) {
+              subscriberRef.current.addDeps(currentBase)
             }
-            return stateFetcher.getData()
+            return subscriberRef.getData()
           }
         }
       }
