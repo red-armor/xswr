@@ -5,7 +5,9 @@ const defaultConfig = {
   // for cache strategy usage
   maxAge: 0,
   minThresholdMS: 300,
-  staleWhileRevalidateMS: 5 * 60 * 1000
+  staleWhileRevalidateMS: 5 * 60 * 1000,
+
+  poolInterval: 0
 }
 
 export default args => {

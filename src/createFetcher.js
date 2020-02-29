@@ -33,7 +33,7 @@ proto.notifyData = function() {
 
   // notify subscriber
   state.componentSubscribers.forEach(({subscriber, remove}) => {
-    subscriber.triggerUpdate(data)
+    subscriber.handleUpdate(data)
     remove()
   })
 
@@ -48,8 +48,10 @@ proto.notifyError = function() {
   const {error, promiseSubscribers, subscribers} = state
 
   // notify subscriber
-  // state.subscribers.forEach(subscriber => subscriber.triggerUpdate())
-  // state.subscribers = []
+  state.componentSubscribers.forEach(({subscriber, remove}) => {
+    subscriber.handleError(data)
+    remove()
+  })
 
   promiseSubscribers.forEach(({subscriber, remove}) => {
     subscriber.reject(error)
@@ -66,7 +68,7 @@ proto.assertValidating = function() {
 // trigger fetcher to run...
 proto.validate = function() {
   const state = this[STATE]
-  const {fetch, fetchArgs, cacheStrategy} = state
+  const {fetch, fetchArgs} = state
 
   state.finalized = false
   state.promise = fetch.apply(state, fetchArgs).then(

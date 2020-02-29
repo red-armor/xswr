@@ -5,7 +5,7 @@ import resolveArgs from "./resolveArgs"
 import Scope from "./Scope"
 
 export default (...args) => {
-  const {key, fetchArgs, fetch, config} = resolveArgs(args)
+  const {fetchArgs, fetch, config} = resolveArgs(args)
   const scopeRef = useRef(new Scope(config))
 
   const [, setState] = useState(0)
@@ -13,7 +13,6 @@ export default (...args) => {
 
   const subscriberRef = useRef(
     new ComponentSubscriber({
-      key,
       updater,
       fetch,
       fetchArgs,
@@ -39,7 +38,7 @@ export default (...args) => {
             ) {
               subscriberRef.current.addDeps(currentBase)
             }
-            return subscriberRef.getData()
+            return subscriberRef.current.getData()
           }
         }
       }

@@ -6,12 +6,11 @@ class Store {
     this.currentComponentSubscriber = null
   }
 
-  getFetcher({key, fetch, fetchArgs, config}) {
+  getFetcher({key, fetch, fetchArgs}) {
     if (!this.fetchers[key]) {
       this.fetchers[key] = createFetcher({
         key,
         fetch,
-        config,
         fetchArgs
       })
     }
