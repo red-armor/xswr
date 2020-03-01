@@ -52,16 +52,16 @@ const {data, error, isValidating, clearPooling, isPooling} = useXS(
 
 #### data
 
-1. 如果 cache 中有数据的话，首先返回 cache 数据
-2. 判断是否存在 ongoing 的请求；
-   1. 如果存在 data 会在请求结束以后被更新
-   2. 如果不存在，判断当前的 data 是否可用
+1. 如果有缓存数据的话，首先返回缓存数据
+2. 判断是否存在正在执行的请求；
+   1. 如果请求正常返回，会在请求结束以后对 data 进行更新
+   2. 如果不存在，判断当前的缓存数据是否可用
       1. 如果可用，处理结束
       2. 如果不可能，开始验证请求，并且等待请求结束进行数据更新
 
 #### error
 
-1. 如果 response 结束，并且报错的话
+1. 如果请求结束，并且报错的话
    1. 判断是否可以进行重试
       1. 如果可以重试，则重新发起请求，并且等待返回状态
       2. 如果说没有重试机会，则设置 error 为当前处理的错误信息
@@ -94,10 +94,10 @@ const {data, error, isValidating, clearPooling, isPooling} = useXS(
 2. `poolingInterval=0`, 轮询间隔毫秒数
 3. `retryMaxCount=3`，最多重试的次数
 4. `retryInterval=1000`，重试的基数时间间隔毫秒数
-5. `suppressUpdateIfEqual=true`，当获取到数据以后，会进行新旧值的对比；默认情况下，如果说相等的话，就不会再依赖它的请求再次调用
+5. `suppressUpdateIfEqual=true`，当获取到数据以后，会进行新旧值的对比；默认情况下，如果说相等的话，依赖它的请求不会再触发
 6. `shouldComponentUpdate`，即使 data 发生变化也不触发组件的重新渲染，用来优化请求存在依赖关系时造成的无效渲染消耗
-7. `onSuccess`,
-8. `onError`,
+7. `onSuccess`, 如果请求正常返回，则会直接被调用；如果报错，会在重发请求正常返回时进行调用
+8. `onError`, 如果请求失败，并且重试结束，依旧返回报错时进行调用
 
 #### deps
 
