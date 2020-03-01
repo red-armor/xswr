@@ -33,6 +33,3 @@ yarn add xswr
 
 1. [useXS - React Hooks solution](./docs/useXS-zh_CN.md)
 2. [xs - Promise-based Ajax solution](./docs/xs-zh_CN.md)
-
-<!-- 通过获取数据或者报错的方式更新组件，可以解决请求存在依赖关系时下游值的更新；但是也造成了一定程度的无效渲染，在 xswr 中 -->
-<!-- 在 xswr 中 fetcher 是通过 key 进行关联和共享的，config 是互相隔离的；也就是说，相同的 key 可以拥有不同的 retry 和 pooling 策略 -->
