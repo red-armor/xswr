@@ -58,6 +58,8 @@ export default class Scope {
 
   attemptToPooling() {
     if (this.poolingStrategy.interval <= 0) return
+    // when start pooling, retry strategy should be reset..
+    this.retryStrategy.cleanup()
 
     if (this.mode == MODE.NORMAL || this.mode === MODE.RETRY) {
       this.mode = MODE.POOL

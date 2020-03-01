@@ -41,10 +41,15 @@ export default () => {
   // console.log("result ", data, isValidating, error)
   // console.log("city ", city.data)
 
-  xs("/api/info", url => {
-    // return getInfo(url)
-    return Promise.reject(new Error("failed"))
-  }).then(
+  xs(
+    "/api/info",
+    url => {
+      return getInfo(url)
+    },
+    {
+      poolingInterval: 1000
+    }
+  ).then(
     result => {
       console.log("result ", result)
     },

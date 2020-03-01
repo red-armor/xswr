@@ -5,6 +5,7 @@ export default class RetryStrategy {
     this.timeoutHandler = null
     this.interval = interval
     this.maxCount = maxCount
+    this.maxCountOriginalValue = maxCount
   }
 
   nextTick() {
@@ -15,8 +16,13 @@ export default class RetryStrategy {
     return timeout
   }
 
-  resumeTick() {
+  reset() {
     this.count = 0
+    this.maxCount = this.maxCountOriginalValue
+  }
+
+  resumeTick() {
+    this.reset()
     this.continueTick()
   }
 
@@ -31,6 +37,7 @@ export default class RetryStrategy {
   }
 
   cleanup() {
+    this.reset()
     if (this.timeoutHandler) {
       clearTimeout(this.timeoutHandler)
       this.timeoutHandler = null
