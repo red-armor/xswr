@@ -11,7 +11,7 @@ const MODE = {
 export default class Scope {
   constructor(config) {
     const {
-      immediately,
+      forceValidate,
       maxAge,
       minThresholdMS,
       staleWhileRevalidateMS,
@@ -26,7 +26,7 @@ export default class Scope {
 
     this.cacheStrategy = new CacheStrategy({
       maxAge,
-      immediately,
+      forceValidate,
       minThresholdMS,
       staleWhileRevalidateMS
     })
@@ -61,7 +61,7 @@ export default class Scope {
     // when start pooling, retry strategy should be reset..
     this.retryStrategy.cleanup()
 
-    if (this.mode == MODE.NORMAL || this.mode === MODE.RETRY) {
+    if (this.mode === MODE.NORMAL || this.mode === MODE.RETRY) {
       this.mode = MODE.POOL
     }
 

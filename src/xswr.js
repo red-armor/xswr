@@ -2,9 +2,8 @@
 // return a promise
 import PromiseSubscriber from "./PromiseSubscriber"
 import store from "./store"
-import resolveArgs from "./resolveArgs"
+import resolveArgs, {buildKey} from "./resolveArgs"
 import Scope from "./Scope"
-import {buildKey} from "./resolveArgs"
 
 export default (...args) => {
   const {config, fetchArgs, fetch} = resolveArgs(args)

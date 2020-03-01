@@ -1,7 +1,7 @@
 export default class CacheStrategy {
-  constructor({maxAge, immediately, minThresholdMS, staleWhileRevalidateMS}) {
+  constructor({maxAge, forceValidate, minThresholdMS, staleWhileRevalidateMS}) {
     this.maxAge = maxAge
-    this.immediately = immediately
+    this.forceValidate = forceValidate
     this.minThresholdMS = minThresholdMS
     this.staleWhileRevalidateMS = staleWhileRevalidateMS
   }
@@ -14,10 +14,9 @@ export default class CacheStrategy {
 
     if (delta < 0) return false
 
-    if (this.immediately) {
+    if (this.forceValidate) {
       return delta < this.minThresholdMS
-    } else {
-      return delta < this.staleWhileRevalidateMS
     }
+    return delta < this.staleWhileRevalidateMS
   }
 }

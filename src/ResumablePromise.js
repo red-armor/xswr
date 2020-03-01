@@ -29,31 +29,6 @@ export default function ResumablePromise() {
 }
 const proto = ResumablePromise.prototype
 
-function resolve(promise, value) {
-  if (typeof value === "object" && value.then) {
-    value.then(
-      result => resolve(promise, result),
-      reason => reject(promise, reason)
-    )
-  } else {
-    promise[STATE].state = FULFILLED
-    promise[STATE].result = value
-    const chainPromises = promise[STATE].chainPromises
-    chainPromises.forEach(chainPromise => {
-      perform(promise, chainPromise)
-    })
-  }
-}
-
-function reject(promise, reason) {
-  promise[STATE].state = REJECTED
-  promise[STATE].reason = reason
-  const chainPromises = promise[STATE].chainPromises
-  chainPromises.forEach(chainPromise => {
-    perform(promise, chainPromise)
-  })
-}
-
 function perform(promise, sub) {
   if (promise[STATE].state === PENDING) return
 
@@ -69,6 +44,31 @@ function perform(promise, sub) {
     resolve(sub, value)
   } catch (err) {
     reject(sub, err)
+  }
+}
+
+function reject(promise, reason) {
+  promise[STATE].state = REJECTED
+  promise[STATE].reason = reason
+  const {chainPromises} = promise[STATE]
+  chainPromises.forEach(chainPromise => {
+    perform(promise, chainPromise)
+  })
+}
+
+function resolve(promise, value) {
+  if (typeof value === "object" && value.then) {
+    value.then(
+      result => resolve(promise, result),
+      reason => reject(promise, reason)
+    )
+  } else {
+    promise[STATE].state = FULFILLED
+    promise[STATE].result = value
+    const {chainPromises} = promise[STATE]
+    chainPromises.forEach(chainPromise => {
+      perform(promise, chainPromise)
+    })
   }
 }
 

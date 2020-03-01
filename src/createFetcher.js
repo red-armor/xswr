@@ -1,4 +1,4 @@
-import {createHiddenProperty, createHiddenProperties, STATE} from "./commons"
+import {createHiddenProperty, STATE} from "./commons"
 
 function fetcher() {}
 const proto = fetcher.prototype
@@ -18,8 +18,8 @@ proto.addComponentSubscriber = function(subscriber) {
   if (index !== -1) return
 
   subscriber.remover = () => {
-    const index = findIndex(state.componentSubscribers, subscriber)
-    if (index !== -1) state.componentSubscribers.splice(index, 1)
+    const removerIndex = findIndex(state.componentSubscribers, subscriber)
+    if (removerIndex !== -1) state.componentSubscribers.splice(removerIndex, 1)
   }
   state.componentSubscribers.push({
     subscriber,
@@ -33,8 +33,8 @@ proto.addPromiseSubscriber = function(subscriber) {
   if (index !== -1) return
 
   subscriber.remover = () => {
-    const index = findIndex(state.promiseSubscribers, subscriber)
-    if (index !== -1) state.promiseSubscribers.splice(index, 1)
+    const removerIndex = findIndex(state.promiseSubscribers, subscriber)
+    if (removerIndex !== -1) state.promiseSubscribers.splice(removerIndex, 1)
   }
   state.promiseSubscribers.push({
     subscriber,
@@ -144,6 +144,7 @@ proto.getData = function(subscriber) {
   // If there has data, return first
   if (data) return data
   this.revalidate(subscriber)
+  return null
 }
 
 /**

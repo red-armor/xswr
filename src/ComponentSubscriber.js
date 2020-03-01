@@ -13,13 +13,13 @@ export default class ComponentSubscriber {
     deps,
     onError,
     onSuccess,
-    shouldComponentUpdateAfterStateChange
+    suppressUpdateIfEqual
   }) {
     this.id = `component_subscriber_${count++}`
     this.deps = []
     this.updater = updater
     this.remover = []
-    this.immediately = true
+    this.forceValidate = true
     this.children = []
     this.scope = scope
     this.scope.bind(this)
@@ -30,7 +30,7 @@ export default class ComponentSubscriber {
 
     this.onError = onError
     this.onSuccess = onSuccess
-    this.shouldComponentUpdateAfterStateChange = shouldComponentUpdateAfterStateChange
+    this.suppressUpdateIfEqual = suppressUpdateIfEqual
 
     this.handleDeps(deps)
     this.attemptToFetch()
@@ -65,16 +65,15 @@ export default class ComponentSubscriber {
       return
     }
 
-    return this.fetcher.getData(this)
+    return this.fetcher.getData(this) // eslint-disable-line
   }
 
   getError() {
     if (this.fetcher.hasError) {
       if (this.scope.assertContinueRetry()) {
         return null
-      } else {
-        return this.fetcher.getProp("error")
       }
+      return this.fetcher.getProp("error")
     }
 
     return null
@@ -102,7 +101,7 @@ export default class ComponentSubscriber {
   }
 
   shouldComponentUpdate() {
-    return this.shouldComponentUpdateAfterStateChange
+    return this.suppressUpdateIfEqual
   }
 
   handleUpdate(newData) {

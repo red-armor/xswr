@@ -1,8 +1,7 @@
 import {toString} from "./commons"
 
 const defaultConfig = {
-  immediately: false,
-  poolingInterval: 0,
+  forceValidate: false,
 
   // for cache strategy usage
   maxAge: 0,
@@ -14,7 +13,7 @@ const defaultConfig = {
   retryInterval: 1000,
   retryMaxCount: 3,
 
-  shouldComponentUpdateAfterStateChange: true
+  suppressUpdateIfEqual: true
 }
 
 export const buildKey = (url, params) => {

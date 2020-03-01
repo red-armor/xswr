@@ -1,5 +1,6 @@
 import equal from "deep-equal"
 import ResumablePromise from "./ResumablePromise"
+
 let count = 0
 
 export default class PromiseSubscriber {
