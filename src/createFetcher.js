@@ -186,20 +186,14 @@ export default ({key, fetch, fetchArgs}) => {
 
   createHiddenProperty(_fetcher, STATE, {
     key,
-
     fetch,
     fetchArgs,
 
     data: null,
-    deps: [],
-    isRevoked: false,
     finalized: false,
     componentSubscribers: [],
-
     promise: null,
     promiseSubscribers: [],
-
-    onFetching: false,
     hasError: false,
     error: null,
     lastUpdatedMS: null
