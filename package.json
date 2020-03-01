@@ -1,6 +1,6 @@
 {
   "name": "xswr",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "cross platform swr",
   "main": "index.js",
   "scripts": {
