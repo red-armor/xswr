@@ -31,5 +31,5 @@ yarn add xswr
 
 ## Usage
 
-1. [useXS - React Hooks solution](./docs/useXS-zh_CN.md)
-2. [xs - Promise-based Ajax solution](./docs/xs-zh_CN.md)
+1. [useXS - React Hooks solution](./docs/useXS.md)
+2. [xs - Promise-based Ajax solution](./docs/xs.md)
