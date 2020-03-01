@@ -25,6 +25,12 @@
     "request",
     "cache"
   ],
+  "files": [
+    "README.md",
+    "README-zh_CN.md",
+    "src/",
+    "index.js"
+  ],
   "author": "youchaoliu@gmail.com",
   "license": "ISC",
   "devDependencies": {
