@@ -21,5 +21,13 @@ module.exports = {
     sourceType: "module"
   },
   plugins: ["react"],
-  rules: {}
+  rules: {
+    "no-plusplus": 0,
+    "new-cap": 0,
+    "no-underscore-dangle": 0,
+    "no-use-before-define": 0,
+    "no-param-reassign": 0,
+    "react/no-this-in-sfc": 0,
+    "func-names": 0
+  }
 }

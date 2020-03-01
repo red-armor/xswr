@@ -1,5 +1,4 @@
 import {useEffect, useCallback, useState, useRef} from "react"
-import store from "./store"
 import ComponentSubscriber from "./ComponentSubscriber"
 import resolveArgs from "./resolveArgs"
 import Scope from "./Scope"
@@ -10,12 +9,7 @@ const STATE = USE_XSWR
 // last one mayBe deps...
 export default (...args) => {
   const {fetchArgs, fetch, config, deps} = resolveArgs(args)
-  const {
-    onError,
-    onSuccess,
-    shouldComponentUpdateAfterStateChange,
-    ...restConfig
-  } = config
+  const {onError, onSuccess, suppressUpdateIfEqual, ...restConfig} = config
 
   const scopeRef = useRef()
   if (!scopeRef.current) {
@@ -36,7 +30,7 @@ export default (...args) => {
 
       onError,
       onSuccess,
-      shouldComponentUpdateAfterStateChange
+      suppressUpdateIfEqual
     })
   }
 

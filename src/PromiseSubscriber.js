@@ -1,6 +1,7 @@
-let count = 0
-
+import equal from "deep-equal"
 import ResumablePromise from "./ResumablePromise"
+
+let count = 0
 
 export default class PromiseSubscriber {
   constructor({fetcher, scope}) {
@@ -10,23 +11,36 @@ export default class PromiseSubscriber {
     this.scope.bind(this)
     this.remover = null
     this.promise = new ResumablePromise()
+    this.dataRef = null
 
     this.fetcher.handlePromise(this)
   }
 
-  resolve(result) {
-    if (!this.scope.assertResultEqual(result)) {
-      this.scope.usedData = result
-      this.promise.resolve(result)
+  resolve(newData) {
+    if (!equal(this.dataRef, newData)) {
+      this.dataRef = newData
+      this.promise.resolve(newData)
+
+      if (typeof this.onSuccess === "function") {
+        this.onSuccess(newData)
+      }
     }
+
+    this.scope.attemptToPooling()
   }
 
   reject(err) {
-    if (!this.scope.assertErrorEqual(err)) {
-      this.promise.resolve(err)
-    }
+    if (this.scope.assertContinueRetry()) {
+      this.scope.attemptToRetry()
+    } else {
+      this.promise.reject(err)
 
-    this.scope.attemptToRetry()
+      if (typeof this.onError === "function") {
+        this.onError(err)
+      }
+
+      this.scope.attemptToPooling()
+    }
   }
 
   validate() {
@@ -38,5 +52,9 @@ export default class PromiseSubscriber {
       this.remover()
     }
     this.remover = null
+  }
+
+  forceRevalidate() {
+    this.fetcher.forcePromiseRevalidate(this)
   }
 }

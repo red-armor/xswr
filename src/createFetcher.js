@@ -1,4 +1,4 @@
-import {createHiddenProperty, createHiddenProperties, STATE} from "./commons"
+import {createHiddenProperty, STATE} from "./commons"
 
 function fetcher() {}
 const proto = fetcher.prototype
@@ -18,8 +18,8 @@ proto.addComponentSubscriber = function(subscriber) {
   if (index !== -1) return
 
   subscriber.remover = () => {
-    const index = findIndex(state.componentSubscribers, subscriber)
-    if (index !== -1) state.componentSubscribers.splice(index, 1)
+    const removerIndex = findIndex(state.componentSubscribers, subscriber)
+    if (removerIndex !== -1) state.componentSubscribers.splice(removerIndex, 1)
   }
   state.componentSubscribers.push({
     subscriber,
@@ -33,8 +33,8 @@ proto.addPromiseSubscriber = function(subscriber) {
   if (index !== -1) return
 
   subscriber.remover = () => {
-    const index = findIndex(state.promiseSubscribers, subscriber)
-    if (index !== -1) state.promiseSubscribers.splice(index, 1)
+    const removerIndex = findIndex(state.promiseSubscribers, subscriber)
+    if (removerIndex !== -1) state.promiseSubscribers.splice(removerIndex, 1)
   }
   state.promiseSubscribers.push({
     subscriber,
@@ -109,7 +109,7 @@ proto.validate = function() {
  * Do not care about cache is valid or not..Normally, it's used for pooling or
  * retry...
  */
-proto.forceRevalidate = function(subscriber) {
+proto.forceComponentRevalidate = function(subscriber) {
   // If there has ongoing request, bind `onFulfilled` and `onReject`
   if (this.assertValidating()) {
     this.addComponentSubscriber(subscriber)
@@ -144,6 +144,22 @@ proto.getData = function(subscriber) {
   // If there has data, return first
   if (data) return data
   this.revalidate(subscriber)
+  return null
+}
+
+/**
+ * Do not care about cache is valid or not..Normally, it's used for pooling or
+ * retry...
+ */
+proto.forcePromiseRevalidate = function(subscriber) {
+  // If there has ongoing request, bind `onFulfilled` and `onReject`
+  if (this.assertValidating()) {
+    this.addPromiseSubscriber(subscriber)
+  } else {
+    // If there is not ongoing request, check its validation.
+    this.addPromiseSubscriber(subscriber)
+    this.validate()
+  }
 }
 
 proto.handlePromise = function(subscriber) {

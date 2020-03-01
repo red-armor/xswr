@@ -15,9 +15,15 @@ describe("test", () => {
   })
 
   test("reject error", () => {
-    return xs("/api/user", url => {
-      return Promise.reject(new Error("failed"))
-    }).then(
+    return xs(
+      "/api/user",
+      url => {
+        return Promise.reject(new Error("failed"))
+      },
+      {
+        retryInterval: 200
+      }
+    ).then(
       () => {},
       err => {
         expect(err.message).toEqual("failed")

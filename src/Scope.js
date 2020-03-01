@@ -11,7 +11,7 @@ const MODE = {
 export default class Scope {
   constructor(config) {
     const {
-      immediately,
+      forceValidate,
       maxAge,
       minThresholdMS,
       staleWhileRevalidateMS,
@@ -26,7 +26,7 @@ export default class Scope {
 
     this.cacheStrategy = new CacheStrategy({
       maxAge,
-      immediately,
+      forceValidate,
       minThresholdMS,
       staleWhileRevalidateMS
     })
@@ -56,22 +56,12 @@ export default class Scope {
     this.retryStrategy.belongs = subscriber
   }
 
-  assertResultEqual(newResult) {
-    this.cleanup()
-    this.attemptToPooling()
-    if (!this.stopIfResultEqual) return false
-    return true
-  }
-
-  assertErrorEqual(error) {
-    this.cleanup()
-    return false
-  }
-
   attemptToPooling() {
     if (this.poolingStrategy.interval <= 0) return
+    // when start pooling, retry strategy should be reset..
+    this.retryStrategy.cleanup()
 
-    if (this.mode == MODE.NORMAL || this.mode === MODE.RETRY) {
+    if (this.mode === MODE.NORMAL || this.mode === MODE.RETRY) {
       this.mode = MODE.POOL
     }
 
