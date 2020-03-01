@@ -14,15 +14,10 @@ export default function ResumablePromise() {
   const state = {}
   createHiddenProperties(state, {
     state: PENDING,
-
-    receive: null,
     result: null,
     reason: null,
-
     onFulfilled: null,
-
     onRejected: null,
-
     chainPromises: []
   })
   createHiddenProperty(this, STATE, state)

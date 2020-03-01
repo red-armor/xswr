@@ -13,6 +13,7 @@ export default class ComponentSubscriber {
     deps,
     onError,
     onSuccess,
+    shouldComponentUpdate,
     suppressUpdateIfEqual
   }) {
     this.id = `component_subscriber_${count++}`
@@ -30,6 +31,7 @@ export default class ComponentSubscriber {
 
     this.onError = onError
     this.onSuccess = onSuccess
+    this.shouldComponentUpdate = shouldComponentUpdate
     this.suppressUpdateIfEqual = suppressUpdateIfEqual
 
     this.handleDeps(deps)
@@ -100,17 +102,13 @@ export default class ComponentSubscriber {
     this.remover = null
   }
 
-  shouldComponentUpdate() {
-    return this.suppressUpdateIfEqual
-  }
-
   handleUpdate(newData) {
-    if (!equal(this.dataRef, newData)) {
+    if (!this.suppressUpdateIfEqual || !equal(this.dataRef, newData)) {
       this.dataRef = newData
       this.children.forEach(child => {
         child.attemptToFetch()
       })
-      if (this.shouldComponentUpdate()) {
+      if (this.shouldComponentUpdate) {
         this.updater()
       }
 
@@ -126,7 +124,7 @@ export default class ComponentSubscriber {
     if (this.scope.assertContinueRetry()) {
       this.scope.attemptToRetry()
     } else {
-      if (this.shouldComponentUpdate()) {
+      if (this.shouldComponentUpdate) {
         this.updater()
       }
 

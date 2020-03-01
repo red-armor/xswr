@@ -13,6 +13,7 @@ const defaultConfig = {
   retryInterval: 1000,
   retryMaxCount: 3,
 
+  shouldComponentUpdate: true,
   suppressUpdateIfEqual: true
 }
 

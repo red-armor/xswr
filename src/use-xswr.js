@@ -9,7 +9,13 @@ const STATE = USE_XSWR
 // last one mayBe deps...
 export default (...args) => {
   const {fetchArgs, fetch, config, deps} = resolveArgs(args)
-  const {onError, onSuccess, suppressUpdateIfEqual, ...restConfig} = config
+  const {
+    onError,
+    onSuccess,
+    shouldComponentUpdate,
+    suppressUpdateIfEqual,
+    ...restConfig
+  } = config
 
   const scopeRef = useRef()
   if (!scopeRef.current) {
@@ -30,6 +36,7 @@ export default (...args) => {
 
       onError,
       onSuccess,
+      shouldComponentUpdate,
       suppressUpdateIfEqual
     })
   }
