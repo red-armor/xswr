@@ -4,7 +4,8 @@
   "description": "cross platform swr",
   "main": "index.js",
   "scripts": {
-    "examples:basic": "DIR=basic EXT=js webpack-dev-server",
+    "xs:basic": "DIR=xs/basic EXT=js webpack-dev-server",
+    "usexs:basic": "DIR=usexs/basic EXT=js webpack-dev-server",
     "test": "jest",
     "lint": "./node_modules/.bin/eslint ./src/**/*.js",
     "lint-fix": "./node_modules/.bin/eslint --fix ./src/**/*.js"

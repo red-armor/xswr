@@ -16,7 +16,7 @@ export const getInfo = (url, params) => {
           ts: Date.now(),
           success: true
         })
-      }, 1000)
+      }, 3000)
     })
   }
 

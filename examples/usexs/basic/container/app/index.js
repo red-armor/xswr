@@ -1,4 +1,4 @@
-import {useXS, xs} from "xswr"
+import {useXS} from "xswr"
 import {getInfo} from "./api"
 
 export default () => {
@@ -21,7 +21,6 @@ export default () => {
 
   const {data, isValidating, error} = result
 
-  // won't run until data is ready...
   const city = useXS(
     () => {
       const {data} = result
@@ -34,29 +33,8 @@ export default () => {
     {
       staleWhileRevalidateMS: 1000
     },
-
     [result]
   )
-
-  console.log("result ", data, isValidating, error)
-  console.log("city ", city.data)
-
-  // xs(
-  //   "/api/info",
-  //   url => {
-  //     return getInfo(url)
-  //   },
-  //   {
-  //     poolingInterval: 1000
-  //   }
-  // ).then(
-  //   result => {
-  //     console.log("result ", result)
-  //   },
-  //   err => {
-  //     console.log("errxxxxx ", err)
-  //   }
-  // )
 
   return null
 }
