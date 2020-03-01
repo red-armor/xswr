@@ -120,12 +120,31 @@ proto.forceComponentRevalidate = function(subscriber) {
   }
 }
 
-proto.revalidate = function(subscriber) {
+/**
+ * Basically, used by `ComponentSubscriber`. trigger fetch asap
+ */
+proto.attemptToValidate = function(subscriber) {
   const {
     scope: {cacheStrategy}
   } = subscriber
   const state = this[STATE]
   const {lastUpdatedMS} = state
+
+  if (!this.assertValidating() && !cacheStrategy.canIUseCache(lastUpdatedMS)) {
+    this.validate()
+  }
+}
+
+proto.getData = function(subscriber) {
+  const {
+    scope: {cacheStrategy}
+  } = subscriber
+
+  const state = this[STATE]
+  const {lastUpdatedMS, data} = state
+
+  // If there has data, return first
+  if (data) return data
 
   // If there has ongoing request, bind `onFulfilled` and `onReject`
   if (this.assertValidating()) {
@@ -135,15 +154,6 @@ proto.revalidate = function(subscriber) {
     this.addComponentSubscriber(subscriber)
     this.validate()
   }
-}
-
-proto.getData = function(subscriber) {
-  const state = this[STATE]
-
-  const {data} = state
-  // If there has data, return first
-  if (data) return data
-  this.revalidate(subscriber)
   return null
 }
 

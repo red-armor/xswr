@@ -1,20 +1,25 @@
-let count = -1
+const counter = {}
 
 export const getInfo = (url, params) => {
-  if (url === "/api/info") {
-    count++
+  if (url.startsWith("/api/info")) {
+    const parts = url.split("/")
+    const key = parts.pop()
+    if (typeof counter[key] === "undefined") {
+      counter[key] = -1
+    }
+    counter[key] += 1
     return new Promise((resolve, reject) => {
       setTimeout(() => {
         resolve({
           data: [
             {
-              location: `shanghai_${count}`
+              location: `shanghai_${key}_${counter[key]}`
             },
             {
-              location: `beijing_${count}`
+              location: `beijing_${key}_${counter[key]}`
             },
             {
-              location: `nanjing_${count}`
+              location: `nanjing_${key}_${counter[key]}`
             }
           ],
           ts: Date.now(),

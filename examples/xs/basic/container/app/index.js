@@ -1,74 +1,45 @@
-import React, {useState, useEffect, useRef} from "react"
-import {xs} from "xswr"
-import {getInfo} from "./api"
-
-const initData = (resolve, reject) => {
-  xs("/api/info", url => getInfo(url)).then(
-    result => resolve(result),
-    err => reject(err)
-  )
-}
+import React, {useRef} from "react"
+import UseCacheValue from "./UseCacheValue"
+import ForceValidate from "./ForceValidate"
+import LessThanTimeout from "./LessThanTimeout"
+import GreaterThanTimeout from "./GreaterThanTimeout"
 
 export default () => {
-  const [state, resolve] = useState(null)
-  const [err, reject] = useState(null)
-  const startTime = useRef(Date.now())
-  const endTime = useRef(null)
-  const delta = useRef(null)
-  const initRef = useRef(false)
+  const containerStyleRef = useRef({
+    display: "flex",
+    flexDirection: "row"
+  })
 
-  const [state2, resolve2] = useState(null)
-  const [err2, reject2] = useState(null)
-  const startTime2 = useRef(null)
-  const endTime2 = useRef(null)
-  const delta2 = useRef(null)
-  const updated = useRef(null)
-
-  if (!initRef.current) {
-    initData(resolve, reject)
-    initRef.current = true
-  }
-
-  if ((err || state) && !endTime.current) {
-    endTime.current = Date.now()
-    delta.current = endTime.current - startTime.current
-
-    initData(resolve2, reject2)
-    startTime2.current = Date.now()
-  }
-
-  if (endTime2.current) {
-    updated.current = Date.now()
-  }
-
-  if ((err2 || state2) && !endTime2.current) {
-    endTime2.current = Date.now()
-    delta2.current = endTime2.current - startTime2.current
-  }
+  const wrapperStyleRef = useRef({
+    width: "220px",
+    height: "500px",
+    marginRight: "40px",
+    padding: "20px",
+    borderRadius: 8,
+    border: "1px solid #eee"
+  })
 
   return (
-    <div>
-      <h2>Group 1</h2>
-      {startTime.current && <div>{`fetch start at ${startTime.current}`}</div>}
-      {endTime.current && <div>{`fetch finish at ${endTime.current}`}</div>}
-      {delta.current && <div>{`delta ms ${delta.current}`}</div>}
-      {!!err && <div>{err.message}</div>}
-      {!!state &&
-        state.data.map(({location}) => <div key={location}>{location}</div>)}
+    <div style={containerStyleRef.current}>
+      <div style={wrapperStyleRef.current}>
+        <h2>use cache value</h2>
+        <UseCacheValue />
+      </div>
 
-      {startTime2.current && <h2>Group 2</h2>}
-      {startTime2.current && (
-        <div>{`fetch start at ${startTime2.current}`}</div>
-      )}
-      {endTime2.current && <div>{`fetch finish at ${endTime2.current}`}</div>}
-      {updated.current && <div>{`updated at ${updated.current}`}</div>}
-      {endTime2.current && <div>{`delta ms ${delta2.current}`}</div>}
-      {updated.current && (
-        <div>{`update delta ms ${updated.current - startTime2.current}`}</div>
-      )}
-      {!!err2 && <div>{err2.message}</div>}
-      {!!state2 &&
-        state2.data.map(({location}) => <div key={location}>{location}</div>)}
+      <div style={wrapperStyleRef.current}>
+        <h2>force validate value</h2>
+        <ForceValidate />
+      </div>
+
+      <div style={wrapperStyleRef.current}>
+        <h2>less than timeout</h2>
+        <LessThanTimeout />
+      </div>
+
+      <div style={wrapperStyleRef.current}>
+        <h2>greater than timeout</h2>
+        <GreaterThanTimeout />
+      </div>
     </div>
   )
 }

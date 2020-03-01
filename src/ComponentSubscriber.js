@@ -146,7 +146,7 @@ export default class ComponentSubscriber {
         fetch: this.fetch
       })
     }
-    this.fetcher.revalidate(this)
+    this.fetcher.attemptToValidate(this)
   }
 
   addChild(child) {

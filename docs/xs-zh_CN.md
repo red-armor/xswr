@@ -74,4 +74,5 @@ const promise = xs(key, fetcher, config)
 2. `poolingInterval=0`, 轮询间隔毫秒数
 3. `retryMaxCount=3`，最多重试的次数
 4. `retryInterval=1000`，重试的基数时间间隔毫秒数
-5. `suppressUpdateIfEqual=true`，当获取到数据以后，会进行新旧值的对比；默认情况下，如果说相等的话，依赖它的请求不会再触发
+5. `forceValidate=false`, 不验证缓存数据是否有效，每一次都会触发请求试图对缓存数据更新
+6. `suppressUpdateIfEqual=true`，当获取到数据以后，会进行新旧值的对比；默认情况下，如果说相等的话，依赖它的请求不会再触发

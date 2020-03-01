@@ -94,10 +94,11 @@ const {data, error, isValidating, clearPooling, isPooling} = useXS(
 2. `poolingInterval=0`, 轮询间隔毫秒数
 3. `retryMaxCount=3`，最多重试的次数
 4. `retryInterval=1000`，重试的基数时间间隔毫秒数
-5. `suppressUpdateIfEqual=true`，当获取到数据以后，会进行新旧值的对比；默认情况下，如果说相等的话，依赖它的请求不会再触发
-6. `shouldComponentUpdate`，即使 data 发生变化也不触发组件的重新渲染，用来优化请求存在依赖关系时造成的无效渲染消耗
-7. `onSuccess`, 如果请求正常返回，则会直接被调用；如果报错，会在重发请求正常返回时进行调用
-8. `onError`, 如果请求失败，并且重试结束，依旧返回报错时进行调用
+5. `forceValidate=false`, 不验证缓存数据是否有效，每一次都会触发请求试图对缓存数据更新
+6. `suppressUpdateIfEqual=true`，当获取到数据以后，会进行新旧值的对比；默认情况下，如果说相等的话，依赖它的请求不会再触发
+7. `shouldComponentUpdate`，即使 data 发生变化也不触发组件的重新渲染，用来优化请求存在依赖关系时造成的无效渲染消耗
+8. `onSuccess`, 如果请求正常返回，则会直接被调用；如果报错，会在重发请求正常返回时进行调用
+9. `onError`, 如果请求失败，并且重试结束，依旧返回报错时进行调用
 
 #### deps
 
