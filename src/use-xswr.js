@@ -81,7 +81,3 @@ export default (...args) => {
 
   return resultRef.current
 }
-
-// trigger: call function only
-// use-xswr will trigger component re-render...
-// useXSBailResult: return value only

@@ -13,7 +13,6 @@ export default class Scope {
     const {
       forceValidate,
       maxAge,
-      minThresholdMS,
       staleWhileRevalidateMS,
 
       stopIfResultEqual,
@@ -27,7 +26,6 @@ export default class Scope {
     this.cacheStrategy = new CacheStrategy({
       maxAge,
       forceValidate,
-      minThresholdMS,
       staleWhileRevalidateMS
     })
 
