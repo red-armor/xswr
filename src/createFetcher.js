@@ -46,13 +46,14 @@ proto.notifyData = function() {
   const state = this[STATE]
   const {data, promiseSubscribers, componentSubscribers} = state
 
-  // notify subscriber
-  componentSubscribers.forEach(({subscriber, remove}) => {
+  // Should use slice copy, because `componentSubscribers` is changed after remove.
+  // It cause cause the following subscriber not be revoked..
+  componentSubscribers.slice().forEach(({subscriber, remove}) => {
     subscriber.handleUpdate(data)
     remove()
   })
 
-  promiseSubscribers.forEach(({subscriber, remove}) => {
+  promiseSubscribers.slice().forEach(({subscriber, remove}) => {
     subscriber.resolve(data)
     remove()
   })
@@ -63,12 +64,12 @@ proto.notifyError = function() {
   const {error, promiseSubscribers, componentSubscribers} = state
 
   // notify subscriber
-  componentSubscribers.forEach(({subscriber, remove}) => {
+  componentSubscribers.slice().forEach(({subscriber, remove}) => {
     subscriber.handleError(error)
     remove()
   })
 
-  promiseSubscribers.forEach(({subscriber, remove}) => {
+  promiseSubscribers.slice().forEach(({subscriber, remove}) => {
     subscriber.reject(error)
     remove()
   })

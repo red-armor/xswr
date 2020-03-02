@@ -9,10 +9,12 @@ const STATE = RESUMABLE_PROMISE
 const PENDING = 0
 const FULFILLED = 1
 const REJECTED = 2
+let count = 0
 
 export default function ResumablePromise() {
   const state = {}
   createHiddenProperties(state, {
+    id: count++,
     state: PENDING,
     result: null,
     reason: null,
