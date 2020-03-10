@@ -76,3 +76,6 @@ const promise = xs(key, fetcher, config)
 4. `retryInterval=1000`，重试的基数时间间隔毫秒数
 5. `forceValidate=false`, 不验证缓存数据是否有效，每一次都会触发请求试图对缓存数据更新
 6. `suppressUpdateIfEqual=true`，当获取到数据以后，会进行新旧值的对比；默认情况下，如果说相等的话，依赖它的请求不会再触发
+7. `initialValue`, 提供初始化值
+8. `onInitial`, 提供初始化值得函数，可以返回一个对象或者 Promise
+9. `onPersistance`, 函数会在获取数据以后被调用，主要用于持久化，本地数据的更新

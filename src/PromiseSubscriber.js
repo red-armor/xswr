@@ -4,7 +4,7 @@ import ResumablePromise from "./ResumablePromise"
 let count = 0
 
 export default class PromiseSubscriber {
-  constructor({fetcher, scope}) {
+  constructor({fetcher, scope, fetchArgs, cacheKey}) {
     this.id = `promise_subscriber_${count++}`
     this.fetcher = fetcher
     this.scope = scope
@@ -12,6 +12,8 @@ export default class PromiseSubscriber {
     this.remover = null
     this.promise = new ResumablePromise()
     this.dataRef = null
+    this.fetchArgs = fetchArgs
+    this.cacheKey = cacheKey
 
     this.fetcher.handlePromise(this)
   }
@@ -20,6 +22,10 @@ export default class PromiseSubscriber {
     if (!equal(this.dataRef, newData)) {
       this.dataRef = newData
       this.promise.resolve(newData)
+      const {onPersistance} = this.scope
+      if (typeof onPersistance === "function") {
+        onPersistance.call(this, this.cacheKey, newData)
+      }
 
       if (typeof this.onSuccess === "function") {
         this.onSuccess(newData)

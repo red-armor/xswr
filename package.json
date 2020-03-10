@@ -5,7 +5,9 @@
   "main": "index.js",
   "scripts": {
     "xs:basic": "DIR=xs/basic EXT=js webpack-dev-server",
+    "xs:initialValue": "DIR=xs/initialValue EXT=js webpack-dev-server",
     "usexs:basic": "DIR=usexs/basic EXT=js webpack-dev-server",
+    "usexs:initialValue": "DIR=usexs/initialValue EXT=js webpack-dev-server",
     "test": "jest",
     "lint": "./node_modules/.bin/eslint ./src/**/*.js",
     "lint-fix": "./node_modules/.bin/eslint --fix ./src/**/*.js"

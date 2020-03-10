@@ -13,7 +13,11 @@ const defaultConfig = {
   retryMaxCount: 3,
 
   shouldComponentUpdate: true,
-  suppressUpdateIfEqual: true
+  suppressUpdateIfEqual: true,
+
+  initialValue: null,
+  onInitial: null,
+  onPersistance: null
 }
 
 export const buildKey = (url, params) => {

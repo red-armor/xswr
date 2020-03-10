@@ -140,6 +140,7 @@ export default class ComponentSubscriber {
     if (!this.fetcher) {
       const key = this.generateKey()
       if (!key) return
+      this.scope.setCacheKey(key)
       this.fetcher = store.getFetcher({
         key,
         fetchArgs: this.fetchArgs,

@@ -20,7 +20,11 @@ export default class Scope {
       poolingInterval,
 
       retryInterval,
-      retryMaxCount
+      retryMaxCount,
+      cacheKey,
+      onInitial,
+      initialValue,
+      onPersistance
     } = config
 
     this.cacheStrategy = new CacheStrategy({
@@ -46,12 +50,21 @@ export default class Scope {
     this.stopIfResultEqual = stopIfResultEqual
 
     this.belongs = null
+
+    this.cacheKey = cacheKey
+    this.initialValue = initialValue
+    this.onInitial = onInitial
+    this.onPersistance = onPersistance
   }
 
   bind(subscriber) {
     this.belongs = subscriber
     this.poolingStrategy.belongs = subscriber
     this.retryStrategy.belongs = subscriber
+  }
+
+  setCacheKey(cacheKey) {
+    this.cacheKey = cacheKey
   }
 
   attemptToPooling() {

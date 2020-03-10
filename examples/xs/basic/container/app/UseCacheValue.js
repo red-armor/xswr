@@ -2,12 +2,7 @@ import React, {useState, useRef} from "react"
 import {xs} from "xswr"
 import {getInfo} from "./api"
 
-const initData = (resolve, reject) => {
-  xs("/api/info/v1", url => getInfo(url)).then(
-    result => resolve(result),
-    err => reject(err)
-  )
-}
+const initData = (resolve, reject) => xs("/api/info/v1", url => getInfo(url))
 
 export default () => {
   const [state, resolve] = useState(null)
@@ -25,7 +20,7 @@ export default () => {
   const updated = useRef(null)
 
   if (!initRef.current) {
-    initData(resolve, reject)
+    initData().then(resolve, reject)
     initRef.current = true
   }
 
@@ -33,7 +28,7 @@ export default () => {
     endTime.current = Date.now()
     delta.current = endTime.current - startTime.current
 
-    initData(resolve2, reject2)
+    initData().then(resolve2, reject2)
     startTime2.current = Date.now()
   }
 

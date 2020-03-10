@@ -31,3 +31,6 @@ export const RESUMABLE_PROMISE = hasSymbol
 export const toString = Function.call.bind(Object.prototype.toString)
 
 export const generateKey = () => {}
+
+export const isPromiseLike = fn =>
+  fn && typeof fn === "object" && typeof fn.then === "function"

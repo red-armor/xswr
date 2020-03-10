@@ -1,4 +1,4 @@
-import {createHiddenProperty, STATE} from "./commons"
+import {createHiddenProperty, STATE, isPromiseLike} from "./commons"
 
 function fetcher() {}
 const proto = fetcher.prototype
@@ -138,14 +138,10 @@ proto.attemptToValidate = function(subscriber) {
 
 proto.getData = function(subscriber) {
   const {
-    scope: {cacheStrategy}
+    scope: {cacheStrategy, initialValue, onInitial, cacheKey}
   } = subscriber
-
   const state = this[STATE]
   const {lastUpdatedMS, data} = state
-
-  // If there has data, return first
-  if (data) return data
 
   // If there has ongoing request, bind `onFulfilled` and `onReject`
   if (this.assertValidating()) {
@@ -155,6 +151,30 @@ proto.getData = function(subscriber) {
     this.addComponentSubscriber(subscriber)
     this.validate()
   }
+
+  // If there has data, return first
+  if (data) return data
+
+  if (initialValue) {
+    state.data = initialValue
+    subscriber.handleUpdate(initialValue)
+  } else if (typeof onInitial === "function") {
+    try {
+      const pendingValue = onInitial(cacheKey)
+      if (isPromiseLike(pendingValue)) {
+        pendingValue.then(result => {
+          state.data = result
+          subscriber.handleUpdate(result)
+        })
+      } else {
+        state.data = pendingValue
+        subscriber.handleUpdate(pendingValue)
+      }
+    } catch (err) {
+      // dismiss
+    }
+  }
+
   return null
 }
 
@@ -176,12 +196,28 @@ proto.forcePromiseRevalidate = function(subscriber) {
 proto.handlePromise = function(subscriber) {
   const state = this[STATE]
   const {
-    scope: {cacheStrategy}
+    scope: {cacheStrategy, initialValue, onInitial, cacheKey}
   } = subscriber
   const {data, lastUpdatedMS} = state
 
   // If there has data, return first
-  if (data) subscriber.resolve(data)
+  if (data) {
+    subscriber.resolve(data)
+  } else if (initialValue) {
+    subscriber.resolve(initialValue)
+  } else if (typeof onInitial === "function") {
+    try {
+      const pendingValue = onInitial(cacheKey)
+      if (isPromiseLike(pendingValue)) {
+        pendingValue.then(result => subscriber.resolve(result))
+      } else {
+        subscriber.resolve(pendingValue)
+      }
+    } catch (err) {
+      // dismiss
+    }
+  }
+
   // If there has ongoing request, bind `onFulfilled` and `onReject`
   if (this.assertValidating()) {
     this.addPromiseSubscriber(subscriber)

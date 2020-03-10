@@ -2,14 +2,10 @@ import React, {useState, useRef} from "react"
 import {xs} from "xswr"
 import {getInfo} from "./api"
 
-const initData = (resolve, reject) => {
+const initData = () =>
   xs("/api/info/v4", url => getInfo(url), {
     staleWhileRevalidateMS: 298
-  }).then(
-    result => resolve(result),
-    err => reject(err)
-  )
-}
+  })
 
 export default () => {
   const [state, resolve] = useState(null)
@@ -27,7 +23,7 @@ export default () => {
   const updated = useRef(null)
 
   if (!initRef.current) {
-    initData(resolve, reject)
+    initData().then(resolve, reject)
     initRef.current = true
   }
 
@@ -36,7 +32,7 @@ export default () => {
     delta.current = endTime.current - startTime.current
 
     setTimeout(() => {
-      initData(resolve2, reject2)
+      initData().then(resolve2, reject2)
     }, 300)
     startTime2.current = Date.now()
   }
