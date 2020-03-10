@@ -21,6 +21,9 @@
     "type": "git",
     "url": "git@github.com:ryuever/xswr.git"
   },
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/"
+  },
   "keywords": [
     "swr",
     "cross-platform",
