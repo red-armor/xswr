@@ -15,9 +15,10 @@ const defaultConfig = {
   shouldComponentUpdate: true,
   suppressUpdateIfEqual: true,
 
-  initialValue: null,
-  onInitial: null,
-  onPersistance: null
+  initialValue: undefined,
+  onInitial: undefined,
+  onPersistance: undefined,
+  stopIfResultEqual: true
 }
 
 export const buildKey = (url: string, params: object) => {

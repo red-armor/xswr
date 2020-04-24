@@ -5,18 +5,13 @@ import {
   ISubscriber,
   IScope,
   PromiseLike,
-  scopeConfig
+  scopeConfig,
+  MODE
 } from "./interface"
 
 import CacheStrategy from "./CacheStrategy"
 import PoolingStrategy from "./PoolingStrategy"
 import RetryStrategy from "./RetryStrategy"
-
-const MODE = {
-  NORMAL: 0,
-  POOL: 1,
-  RETRY: 2
-}
 
 export default class Scope implements IScope {
   public cacheStrategy: ICacheStrategy
@@ -25,9 +20,9 @@ export default class Scope implements IScope {
   public usedData: object | null
   public mode: number
   public stopIfResultEqual: boolean
-  public belongs: ISubscriber
+  public belongs: ISubscriber | null
   public cacheKey: string
-  public initialValue?: object
+  public initialValue?: null | object
   public onInitial?: (cacheKey: string) => PromiseLike | any
   public onPersistance?: () => void
 

@@ -1,14 +1,14 @@
-import {IScope, IRetryStrategy} from "./interface"
+import {IRetryStrategy, ISubscriber} from "./interface"
 
 export default class RetryStrategy implements IRetryStrategy {
   public count: number
-  public belongs: null | IScope
-  public timeoutHandler: number | null
+  public belongs: null | ISubscriber
+  public timeoutHandler: ReturnType<typeof setTimeout> | null
   public interval: number
   public maxCount: number
   public originCount: number
 
-  constructor({interval, maxCount}) {
+  constructor({interval, maxCount}: {interval: number; maxCount: number}) {
     this.count = 0
     this.belongs = null
     this.timeoutHandler = null
@@ -17,7 +17,7 @@ export default class RetryStrategy implements IRetryStrategy {
     this.originCount = maxCount
   }
 
-  nextTick() {
+  nextTick(): number {
     // exponential back-off
     // http://blog.darrengordon.net/2014/11/exponential-backoff-in-javascript.html
     this.count = Math.max(this.count * 2, 1)
@@ -25,27 +25,27 @@ export default class RetryStrategy implements IRetryStrategy {
     return timeout
   }
 
-  reset() {
+  reset(): void {
     this.count = 0
     this.maxCount = this.originCount
   }
 
-  resumeTick() {
+  resumeTick(): void {
     this.reset()
     this.continueTick()
   }
 
-  continueTick() {
+  continueTick(): void {
     this.maxCount--
     const tick = this.nextTick()
     if (tick) {
       this.timeoutHandler = setTimeout(() => {
-        this.belongs.forceRevalidate()
+        if (this.belongs) this.belongs.forceRevalidate()
       }, tick)
     }
   }
 
-  cleanup() {
+  cleanup(): void {
     this.reset()
     if (this.timeoutHandler) {
       clearTimeout(this.timeoutHandler)

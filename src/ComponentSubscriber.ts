@@ -15,9 +15,9 @@ export default class ComponentSubscriber implements IComponentSubscriber {
   public id: string
   public deps: State[]
   public updater: () => void
-  public remover: any[]
+  public remover: () => void | null
   public forceValidate: boolean
-  public children: ComponentSubscriber[]
+  public children: IComponentSubscriber[]
   public scope: IScope
   public dataRef: null | object
 
@@ -25,8 +25,6 @@ export default class ComponentSubscriber implements IComponentSubscriber {
   public fetcher: null | Fetcher
   public fetchArgs: any[]
 
-  public onError: (err: Error) => void | null
-  public onSuccess: (value?: any) => void | null
   public shouldComponentUpdate: boolean
   public suppressUpdateIfEqual: boolean
 
@@ -36,15 +34,13 @@ export default class ComponentSubscriber implements IComponentSubscriber {
     fetch,
     fetchArgs,
     deps,
-    onError,
-    onSuccess,
     shouldComponentUpdate,
     suppressUpdateIfEqual
   }) {
     this.id = `component_subscriber_${count++}`
     this.deps = []
     this.updater = updater
-    this.remover = []
+    this.remover = () => {}
     this.forceValidate = true
     this.children = []
     this.scope = scope
@@ -54,8 +50,6 @@ export default class ComponentSubscriber implements IComponentSubscriber {
     this.fetch = fetch
     this.fetchArgs = fetchArgs
 
-    this.onError = onError
-    this.onSuccess = onSuccess
     this.shouldComponentUpdate = shouldComponentUpdate
     this.suppressUpdateIfEqual = suppressUpdateIfEqual
 
@@ -136,10 +130,6 @@ export default class ComponentSubscriber implements IComponentSubscriber {
       if (this.shouldComponentUpdate) {
         this.updater()
       }
-
-      if (typeof this.onSuccess === "function") {
-        this.onSuccess(newData)
-      }
     }
 
     this.scope.attemptToPooling()
@@ -151,10 +141,6 @@ export default class ComponentSubscriber implements IComponentSubscriber {
     } else {
       if (this.shouldComponentUpdate) {
         this.updater()
-      }
-
-      if (typeof this.onError === "function") {
-        this.onError(err)
       }
 
       this.scope.attemptToPooling()

@@ -2,8 +2,8 @@ import {
   fetcherSubscriber,
   ISubscriber,
   createFetchOptions,
-  ComponentSubscriber,
-  PromiseSubscriber
+  IComponentSubscriber,
+  IPromiseSubscriber
 } from "./interface"
 
 import {createHiddenProperty, STATE, isPromiseLike} from "./commons"
@@ -59,15 +59,35 @@ proto.notifyData = function(): void {
 
   // Should use slice copy, because `componentSubscribers` is changed after remove.
   // It cause cause the following subscriber not be revoked..
-  componentSubscribers.slice().forEach(({subscriber, remove}) => {
-    subscriber.handleUpdate(data)
-    remove()
-  })
+  componentSubscribers
+    .slice()
+    .forEach(
+      ({
+        subscriber,
+        remove
+      }: {
+        subscriber: IComponentSubscriber
+        remove: () => void
+      }) => {
+        subscriber.handleUpdate(data)
+        remove()
+      }
+    )
 
-  promiseSubscribers.slice().forEach(({subscriber, remove}) => {
-    subscriber.resolve(data)
-    remove()
-  })
+  promiseSubscribers
+    .slice()
+    .forEach(
+      ({
+        subscriber,
+        remove
+      }: {
+        subscriber: IPromiseSubscriber
+        remove: () => void
+      }) => {
+        subscriber.resolve(data)
+        remove()
+      }
+    )
 }
 
 proto.notifyError = function(): void {
@@ -75,15 +95,35 @@ proto.notifyError = function(): void {
   const {error, promiseSubscribers, componentSubscribers} = state
 
   // notify subscriber
-  componentSubscribers.slice().forEach(({subscriber, remove}) => {
-    subscriber.handleError(error)
-    remove()
-  })
+  componentSubscribers
+    .slice()
+    .forEach(
+      ({
+        subscriber,
+        remove
+      }: {
+        subscriber: IComponentSubscriber
+        remove: () => void
+      }) => {
+        subscriber.handleError(error)
+        remove()
+      }
+    )
 
-  promiseSubscribers.slice().forEach(({subscriber, remove}) => {
-    subscriber.reject(error)
-    remove()
-  })
+  promiseSubscribers
+    .slice()
+    .forEach(
+      ({
+        subscriber,
+        remove
+      }: {
+        subscriber: IPromiseSubscriber
+        remove: () => void
+      }) => {
+        subscriber.reject(error)
+        remove()
+      }
+    )
 }
 
 proto.assertValidating = function(): boolean {
@@ -147,7 +187,7 @@ proto.attemptToValidate = function(subscriber: ISubscriber): void {
   }
 }
 
-proto.getData = function(subscriber: ComponentSubscriber): object | null {
+proto.getData = function(subscriber: IComponentSubscriber): object | null {
   const {
     scope: {cacheStrategy, initialValue, onInitial, cacheKey}
   } = subscriber
@@ -193,7 +233,7 @@ proto.getData = function(subscriber: ComponentSubscriber): object | null {
  * Do not care about cache is valid or not..Normally, it's used for pooling or
  * retry...
  */
-proto.forcePromiseRevalidate = function(subscriber: PromiseSubscriber): void {
+proto.forcePromiseRevalidate = function(subscriber: IPromiseSubscriber): void {
   // If there has ongoing request, bind `onFulfilled` and `onReject`
   if (this.assertValidating()) {
     this.addPromiseSubscriber(subscriber)
@@ -204,7 +244,7 @@ proto.forcePromiseRevalidate = function(subscriber: PromiseSubscriber): void {
   }
 }
 
-proto.handlePromise = function(subscriber: PromiseSubscriber): void {
+proto.handlePromise = function(subscriber: IPromiseSubscriber): void {
   const state = this[STATE]
   const {
     scope: {cacheStrategy, initialValue, onInitial, cacheKey}

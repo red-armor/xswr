@@ -20,23 +20,10 @@ export default (...args: any[]): IResumablePromise => {
     fetchArgs,
     cacheKey: key,
     fetcher: stateFetcher,
-    config,
-    scope
+    scope,
+    onError: () => {},
+    onSuccess: () => {}
   })
 
   return subscriber.promise
 }
-
-// console.log('Promise ', PromiseSubscriber)
-
-// function greeter(person: string) {
-//   return "Hello, " + person
-// }
-
-// let user = "Jane User"
-
-// console.log(greeter(user))
-
-// export default {
-//   xs: () => {}
-// }

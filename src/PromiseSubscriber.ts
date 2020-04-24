@@ -1,38 +1,60 @@
 import equal from "deep-equal"
 import ResumablePromise from "./ResumablePromise"
 
-import {Fetcher, IScope} from "./interface"
+import {
+  Fetcher,
+  IScope,
+  IPromiseSubscriber,
+  IResumablePromise,
+  functionOrNull
+} from "./interface"
 
 let count = 0
 
-export default class PromiseSubscriber {
+export default class PromiseSubscriber implements IPromiseSubscriber {
   public id: string
+  public fetcher: Fetcher
+  public scope: IScope
+  public fetchArgs: any[]
+  public promise: IResumablePromise
+  public cacheKey: string
+  public dataRef: null | object
+  public remover: functionOrNull
+  public onSuccess: functionOrNull
+  public onError: functionOrNull
 
   constructor({
     fetcher,
     scope,
     fetchArgs,
-    cacheKey
+    cacheKey,
+    onSuccess,
+    onError
   }: {
     fetcher: Fetcher
     scope: IScope
     fetchArgs: any[]
     cacheKey: string
+    onSuccess: () => void | null
+    onError: () => void | null
   }) {
     this.id = `promise_subscriber_${count++}`
     this.fetcher = fetcher
     this.scope = scope
     this.scope.bind(this)
-    this.remover = null
-    this.promise = new ResumablePromise()
+    this.remover = () => {}
+    // https://stackoverflow.com/questions/43623461/new-expression-whose-target-lacks-a-construct-signature-in-typescript
+    this.promise = new (ResumablePromise as any)()
     this.dataRef = null
     this.fetchArgs = fetchArgs
     this.cacheKey = cacheKey
+    this.onSuccess = onSuccess
+    this.onError = onError
 
     this.fetcher.handlePromise(this)
   }
 
-  resolve(newData) {
+  resolve(newData?: any): void {
     if (!equal(this.dataRef, newData)) {
       this.dataRef = newData
       this.promise.resolve(newData)
@@ -49,7 +71,7 @@ export default class PromiseSubscriber {
     this.scope.attemptToPooling()
   }
 
-  reject(err) {
+  reject(err: Error): void {
     if (this.scope.assertContinueRetry()) {
       this.scope.attemptToRetry()
     } else {

@@ -9,17 +9,14 @@ const STATE = USE_XSWR
 // last one mayBe deps...
 export default (...args) => {
   const {fetchArgs, fetch, config, deps} = resolveArgs(args)
-  const {
-    onError,
-    onSuccess,
-    shouldComponentUpdate,
-    suppressUpdateIfEqual,
-    ...restConfig
-  } = config
+  const {shouldComponentUpdate, suppressUpdateIfEqual, ...restConfig} = config
 
   const scopeRef = useRef()
   if (!scopeRef.current) {
-    scopeRef.current = new Scope(restConfig)
+    scopeRef.current = new Scope({
+      ...restConfig,
+      cacheKey: ""
+    })
   }
 
   const [, setState] = useState(0)
@@ -33,9 +30,6 @@ export default (...args) => {
       fetchArgs,
       deps,
       scope: scopeRef.current,
-
-      onError,
-      onSuccess,
       shouldComponentUpdate,
       suppressUpdateIfEqual
     })
