@@ -1,4 +1,13 @@
-export default class RetryStrategy {
+import {IScope, IRetryStrategy} from "./interface"
+
+export default class RetryStrategy implements IRetryStrategy {
+  public count: number
+  public belongs: null | IScope
+  public timeoutHandler: number | null
+  public interval: number
+  public maxCount: number
+  public originCount: number
+
   constructor({interval, maxCount}) {
     this.count = 0
     this.belongs = null

@@ -1,10 +1,24 @@
 import equal from "deep-equal"
 import ResumablePromise from "./ResumablePromise"
 
+import {Fetcher, IScope} from "./interface"
+
 let count = 0
 
 export default class PromiseSubscriber {
-  constructor({fetcher, scope, fetchArgs, cacheKey}) {
+  public id: string
+
+  constructor({
+    fetcher,
+    scope,
+    fetchArgs,
+    cacheKey
+  }: {
+    fetcher: Fetcher
+    scope: IScope
+    fetchArgs: any[]
+    cacheKey: string
+  }) {
     this.id = `promise_subscriber_${count++}`
     this.fetcher = fetcher
     this.scope = scope

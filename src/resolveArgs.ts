@@ -20,15 +20,15 @@ const defaultConfig = {
   onPersistance: null
 }
 
-export const buildKey = (url, params) => {
-  const o = {url}
+export const buildKey = (url: string, params: object) => {
+  const o: {params?: object; url: string} = {url}
   if (!url || url === "") throw new Error("url is required")
   if (params && toString(params) === "[object Object]") o.params = params
 
   return JSON.stringify(o)
 }
 
-export default args => {
+export default (args: any[]) => {
   const key = args[0]
   const fetchArgs = [].concat(key)
   const fetch = args[1]

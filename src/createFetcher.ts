@@ -1,18 +1,29 @@
+import {
+  fetcherSubscriber,
+  ISubscriber,
+  createFetchOptions,
+  ComponentSubscriber,
+  PromiseSubscriber
+} from "./interface"
+
 import {createHiddenProperty, STATE, isPromiseLike} from "./commons"
 
 function fetcher() {}
 const proto = fetcher.prototype
 
-const findIndex = (subscribers, subscriber) => {
+const findIndex = (
+  subscribers: fetcherSubscriber[],
+  subscriber: ISubscriber
+) => {
   return subscribers.findIndex(({subscriber: o}) => o.id === subscriber.id)
 }
 
-proto.getProp = function(prop) {
+proto.getProp = function(prop: string): any {
   const state = this[STATE]
   return state[prop]
 }
 
-proto.addComponentSubscriber = function(subscriber) {
+proto.addComponentSubscriber = function(subscriber: ISubscriber): void {
   const state = this[STATE]
   const index = findIndex(state.componentSubscribers, subscriber)
   if (index !== -1) return
@@ -27,7 +38,7 @@ proto.addComponentSubscriber = function(subscriber) {
   })
 }
 
-proto.addPromiseSubscriber = function(subscriber) {
+proto.addPromiseSubscriber = function(subscriber: ISubscriber): void {
   const state = this[STATE]
   const index = findIndex(state.promiseSubscribers, subscriber)
   if (index !== -1) return
@@ -42,7 +53,7 @@ proto.addPromiseSubscriber = function(subscriber) {
   })
 }
 
-proto.notifyData = function() {
+proto.notifyData = function(): void {
   const state = this[STATE]
   const {data, promiseSubscribers, componentSubscribers} = state
 
@@ -59,7 +70,7 @@ proto.notifyData = function() {
   })
 }
 
-proto.notifyError = function() {
+proto.notifyError = function(): void {
   const state = this[STATE]
   const {error, promiseSubscribers, componentSubscribers} = state
 
@@ -75,14 +86,14 @@ proto.notifyError = function() {
   })
 }
 
-proto.assertValidating = function() {
+proto.assertValidating = function(): boolean {
   const state = this[STATE]
   const {promise, finalized} = state
   return promise && !finalized
 }
 
 // trigger fetcher to run...
-proto.validate = function() {
+proto.validate = function(): void {
   const state = this[STATE]
   const {fetch, fetchArgs} = state
 
@@ -110,7 +121,7 @@ proto.validate = function() {
  * Do not care about cache is valid or not..Normally, it's used for pooling or
  * retry...
  */
-proto.forceComponentRevalidate = function(subscriber) {
+proto.forceComponentRevalidate = function(subscriber: ISubscriber): void {
   // If there has ongoing request, bind `onFulfilled` and `onReject`
   if (this.assertValidating()) {
     this.addComponentSubscriber(subscriber)
@@ -124,7 +135,7 @@ proto.forceComponentRevalidate = function(subscriber) {
 /**
  * Basically, used by `ComponentSubscriber`. trigger fetch asap
  */
-proto.attemptToValidate = function(subscriber) {
+proto.attemptToValidate = function(subscriber: ISubscriber): void {
   const {
     scope: {cacheStrategy}
   } = subscriber
@@ -136,7 +147,7 @@ proto.attemptToValidate = function(subscriber) {
   }
 }
 
-proto.getData = function(subscriber) {
+proto.getData = function(subscriber: ComponentSubscriber): object | null {
   const {
     scope: {cacheStrategy, initialValue, onInitial, cacheKey}
   } = subscriber
@@ -182,7 +193,7 @@ proto.getData = function(subscriber) {
  * Do not care about cache is valid or not..Normally, it's used for pooling or
  * retry...
  */
-proto.forcePromiseRevalidate = function(subscriber) {
+proto.forcePromiseRevalidate = function(subscriber: PromiseSubscriber): void {
   // If there has ongoing request, bind `onFulfilled` and `onReject`
   if (this.assertValidating()) {
     this.addPromiseSubscriber(subscriber)
@@ -193,7 +204,7 @@ proto.forcePromiseRevalidate = function(subscriber) {
   }
 }
 
-proto.handlePromise = function(subscriber) {
+proto.handlePromise = function(subscriber: PromiseSubscriber): void {
   const state = this[STATE]
   const {
     scope: {cacheStrategy, initialValue, onInitial, cacheKey}
@@ -228,7 +239,8 @@ proto.handlePromise = function(subscriber) {
   }
 }
 
-export default ({key, fetch, fetchArgs}) => {
+export default (options: createFetchOptions) => {
+  const {key, fetch, fetchArgs} = options
   const _fetcher = new fetcher()
 
   createHiddenProperty(_fetcher, STATE, {

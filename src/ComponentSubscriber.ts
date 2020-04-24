@@ -2,9 +2,34 @@ import equal from "deep-equal"
 import store from "./store"
 import {buildKey} from "./resolveArgs"
 import {USE_XSWR} from "./commons"
+import {
+  State,
+  IScope,
+  PromiseLike,
+  IComponentSubscriber,
+  Fetcher
+} from "./interface"
 
 let count = 0
-export default class ComponentSubscriber {
+export default class ComponentSubscriber implements IComponentSubscriber {
+  public id: string
+  public deps: State[]
+  public updater: () => void
+  public remover: any[]
+  public forceValidate: boolean
+  public children: ComponentSubscriber[]
+  public scope: IScope
+  public dataRef: null | object
+
+  public fetch: () => PromiseLike
+  public fetcher: null | Fetcher
+  public fetchArgs: any[]
+
+  public onError: (err: Error) => void | null
+  public onSuccess: (value?: any) => void | null
+  public shouldComponentUpdate: boolean
+  public suppressUpdateIfEqual: boolean
+
   constructor({
     updater,
     scope,
