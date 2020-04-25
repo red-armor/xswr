@@ -5,22 +5,42 @@ import {
   RESUMABLE_PROMISE
 } from "./commons"
 
+import {PromiseLike, IResumablePromise} from "./interface"
+
 const PENDING = 0
 const FULFILLED = 1
 const REJECTED = 2
 let count = 0
 
-interface IResumablePromise {
-  [RESUMABLE_PROMISE]: any
-  // [Key in string | number | symbol]: string;
-}
+// interface IResumablePromise {
+//   [RESUMABLE_PROMISE]: any
+//   resolve: <T>(result: T | PromiseLike<T>) => void,
+//   reject: <T>(reason?: any) => void,
+//   // [Key in string | number | symbol]: string;
+// }
 
 // type SymbolMap = {
 //   [Key in string | number | symbol]: string;
 // }
 
+const enum state {
+  PENDING,
+  FULFILLED,
+  REJECTED
+}
+
+interface PromiseState {
+  id: number
+  state: state
+  result: null
+  reason: null
+  onFulfilled: null
+  onRejected: null
+  chainPromises: []
+}
+
 const ResumablePromise = (function() {
-  const state = {}
+  const state: PromiseState = {} as any
   createHiddenProperties(state, {
     id: count++,
     state: PENDING,
@@ -59,7 +79,7 @@ function perform(promise: IResumablePromise, sub: IResumablePromise) {
   }
 }
 
-function reject(promise: IResumablePromise, reason) {
+function reject(promise: IResumablePromise, reason: any) {
   promise[RESUMABLE_PROMISE].state = REJECTED
   promise[RESUMABLE_PROMISE].reason = reason
   const {chainPromises} = promise[RESUMABLE_PROMISE]
@@ -68,33 +88,39 @@ function reject(promise: IResumablePromise, reason) {
   })
 }
 
-function resolve(promise: IResumablePromise, value) {
-  if (typeof value === "object" && value.then) {
-    value.then(
-      result => resolve(promise, result),
+function resolve<T>(
+  promise: IResumablePromise,
+  value?: T | PromiseLike<T>
+): void {
+  if (typeof value === "object" && (value as PromiseLike<T>).then) {
+    ;(value as PromiseLike<T>).then(
+      (result: T): void => resolve<T>(promise, result),
       reason => reject(promise, reason)
     )
   } else {
     promise[RESUMABLE_PROMISE].state = FULFILLED
     promise[RESUMABLE_PROMISE].result = value
     const {chainPromises} = promise[RESUMABLE_PROMISE]
-    chainPromises.forEach(chainPromise => {
+    chainPromises.forEach((chainPromise: IResumablePromise) => {
       perform(promise, chainPromise)
     })
   }
 }
 
-proto.then = function _then(_onFulfilled, _onRejected) {
+proto.then = function _then<T>(
+  _onFulfilled?: (value?: T | PromiseLike<T>) => void,
+  _onRejected?: (reason?: any) => void
+) {
   const promise = this
   const chainPromise = new ResumablePromise()
   chainPromise[RESUMABLE_PROMISE].onFulfilled =
     _onFulfilled ||
-    function(result) {
+    function(result?: T | PromiseLike<T>) {
       promise.resolve(result)
     }
   chainPromise[RESUMABLE_PROMISE].onRejected =
     _onRejected ||
-    function(reason) {
+    function(reason?: any) {
       promise.reject(reason)
     }
   promise[RESUMABLE_PROMISE].chainPromises.push(chainPromise)
@@ -105,7 +131,9 @@ proto.then = function _then(_onFulfilled, _onRejected) {
 }
 
 // catch will return a Promise as well
-proto.catch = function _catch(_onRejected) {
+proto.catch = function _catch<T>(
+  _onRejected: (reason?: any) => never | PromiseLike<T>
+) {
   const promise = this
   const chainPromise = new ResumablePromise()
   chainPromise[RESUMABLE_PROMISE].onFulfilled = null
@@ -115,28 +143,30 @@ proto.catch = function _catch(_onRejected) {
   return chainPromise
 }
 
-proto.finally = function _finally(onFinally) {
+proto.finally = function _finally(onFinally: () => void) {
   const promise = this
   const chainPromise = new ResumablePromise()
   promise[RESUMABLE_PROMISE].chainPromises.push(chainPromise)
 
-  chainPromise[RESUMABLE_PROMISE].onFulfilled = function(result) {
+  chainPromise[RESUMABLE_PROMISE].onFulfilled = function<T>(
+    result: T | PromiseLike<T>
+  ) {
     onFinally()
     return chainPromise.resolve(result)
   }
-  chainPromise[RESUMABLE_PROMISE].onRejected = function(reason) {
+  chainPromise[RESUMABLE_PROMISE].onRejected = function(reason?: any) {
     onFinally()
     return chainPromise.reject(reason)
   }
   return chainPromise
 }
 
-proto.resolve = function _resolve(result) {
+proto.resolve = function _resolve<T>(result: T | PromiseLike<T>) {
   const promise = this
   resolve(promise, result)
 }
 
-proto.reject = function _reject(reason) {
+proto.reject = function _reject(reason?: any) {
   const promise = this
   reject(promise, reason)
 }

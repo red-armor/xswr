@@ -21,7 +21,7 @@ export default class ComponentSubscriber implements IComponentSubscriber {
   public scope: IScope
   public dataRef: null | object
 
-  public fetch: () => PromiseLike
+  public fetch: <T>() => PromiseLike<T>
   public fetcher: null | Fetcher
   public fetchArgs: any[]
 

@@ -17,7 +17,7 @@ class Store {
     fetchArgs
   }: {
     key: string
-    fetch: () => PromiseLike
+    fetch: <T>() => PromiseLike<T>
     fetchArgs: any[]
   }) {
     if (!this.fetchers[key]) {

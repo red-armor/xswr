@@ -23,8 +23,8 @@ export default class Scope implements IScope {
   public belongs: ISubscriber | null
   public cacheKey: string
   public initialValue?: null | object
-  public onInitial?: (cacheKey: string) => PromiseLike | any
-  public onPersistance?: () => void
+  public onInitial?: <T>(cacheKey: string) => PromiseLike<T> | any
+  public onPersistance?: (cacheKey: string, newData: any) => void
 
   constructor(config: scopeConfig) {
     const {

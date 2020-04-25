@@ -3,12 +3,16 @@ import {
   ISubscriber,
   createFetchOptions,
   IComponentSubscriber,
-  IPromiseSubscriber
+  IPromiseSubscriber,
+  Fetcher
 } from "./interface"
 
 import {createHiddenProperty, STATE, isPromiseLike} from "./commons"
 
-function fetcher() {}
+// function fetcher() {}
+// interface IFetcher {}
+
+const fetcher = (function(): void {} as any) as {new (): Fetcher}
 const proto = fetcher.prototype
 
 const findIndex = (
@@ -139,7 +143,7 @@ proto.validate = function(): void {
 
   state.finalized = false
   state.promise = fetch.apply(state, fetchArgs).then(
-    data => {
+    (data: any) => {
       state.data = data
       state.lastUpdatedMS = Date.now()
       state.error = null
@@ -147,7 +151,7 @@ proto.validate = function(): void {
       state.finalized = true
       this.notifyData()
     },
-    err => {
+    (err: Error) => {
       state.error = err
       state.hasError = true
       state.finalized = true
@@ -213,7 +217,7 @@ proto.getData = function(subscriber: IComponentSubscriber): object | null {
     try {
       const pendingValue = onInitial(cacheKey)
       if (isPromiseLike(pendingValue)) {
-        pendingValue.then(result => {
+        pendingValue.then((result: any) => {
           state.data = result
           subscriber.handleUpdate(result)
         })
@@ -260,7 +264,7 @@ proto.handlePromise = function(subscriber: IPromiseSubscriber): void {
     try {
       const pendingValue = onInitial(cacheKey)
       if (isPromiseLike(pendingValue)) {
-        pendingValue.then(result => subscriber.resolve(result))
+        pendingValue.then((result: any) => subscriber.resolve(result))
       } else {
         subscriber.resolve(pendingValue)
       }
@@ -279,7 +283,7 @@ proto.handlePromise = function(subscriber: IPromiseSubscriber): void {
   }
 }
 
-export default (options: createFetchOptions) => {
+export default (options: createFetchOptions): Fetcher => {
   const {key, fetch, fetchArgs} = options
   const _fetcher = new fetcher()
 

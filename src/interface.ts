@@ -1,8 +1,17 @@
-export interface PromiseLike {
-  then: () => PromiseLike
+import {RESUMABLE_PROMISE} from "./commons"
+
+export interface PromiseLike<T> {
+  then: (
+    onfulfilled?: ((value: T) => T | PromiseLike<T> | void) | null | undefined,
+    onrejected?: (reason: any) => void
+  ) => PromiseLike<T>
 }
 
-export interface IResumablePromise {}
+export interface IResumablePromise {
+  [RESUMABLE_PROMISE]: any
+  resolve: <T>(result: T | PromiseLike<T>) => void
+  reject: <T>(reason?: any) => void
+}
 
 // https://stackoverflow.com/questions/47471052/type-null-is-not-assignable-to-type-void-null
 export type functionOrNull = {(...args: any[]): void} | null
@@ -51,8 +60,8 @@ export interface IScope {
   belongs: ISubscriber | null
   cacheKey: string
   initialValue?: null | object
-  onInitial?: (cacheKey: string) => PromiseLike | any
-  onPersistance?: () => void
+  onInitial?: <T>(cacheKey: string) => PromiseLike<T> | any
+  onPersistance?: (cacheKey: string, newData: any) => void
 
   bind: (subscriber: ISubscriber) => void
   setCacheKey: (cacheKey: string) => void
@@ -76,8 +85,8 @@ export interface scopeConfig {
   retryMaxCount: number
   cacheKey: string
   initialValue?: object
-  onInitial?: (cacheKey: string) => PromiseLike | any
-  onPersistance?: () => void
+  onInitial?: <T>(cacheKey: string) => PromiseLike<T> | any
+  onPersistance?: (cacheKey: string, newData: any) => void
 }
 
 export interface IComponentSubscriber {
@@ -90,7 +99,7 @@ export interface IComponentSubscriber {
   scope: IScope
   dataRef: null | object
 
-  fetch: () => PromiseLike
+  fetch: <T>() => PromiseLike<T>
   fetchArgs: any[]
 
   shouldComponentUpdate: boolean
@@ -98,8 +107,9 @@ export interface IComponentSubscriber {
 
   teardown: () => void
   handleUpdate: (initialValue: object) => void
-  forceRevalidate: () => void
+  handleError: (err: Error) => void
   attemptToFetch: () => void
+  forceRevalidate: () => void
 }
 
 export interface IPromiseSubscriber {
@@ -110,6 +120,7 @@ export interface IPromiseSubscriber {
   remover: functionOrNull
   teardown: () => void
   resolve: (data: any) => void
+  reject: (err: Error) => void
   forceRevalidate: () => void
 }
 
@@ -122,13 +133,13 @@ export interface fetcherSubscriber {
 
 export interface Fetcher {
   key: string
-  fetch: () => PromiseLike
+  fetch: <T>() => PromiseLike<T>
   fetchArgs: any[]
 
   data: null | any
   finalized: boolean
   componentSubscribers: IComponentSubscriber[]
-  promise: null | PromiseLike
+  promise: null
   promiseSubscribers: IPromiseSubscriber[]
   hasError: boolean
   error: null | string
@@ -154,7 +165,7 @@ export interface Fetcher {
 
 export interface createFetchOptions {
   key: string
-  fetch: () => PromiseLike
+  fetch: <T>() => PromiseLike<T>
   fetchArgs: any[]
 }
 
