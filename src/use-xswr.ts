@@ -4,7 +4,7 @@ import ComponentSubscriber from "./ComponentSubscriber"
 import resolveArgs from "./resolveArgs"
 import Scope from "./Scope"
 import {createHiddenProperty, USE_XSWR} from "./commons"
-import {useResult} from "./interface"
+import {useResult, IComponentSubscriber, IScope} from "./interface"
 
 const STATE = USE_XSWR
 
@@ -13,7 +13,9 @@ export default (...args: any[]): useResult => {
   const {fetchArgs, fetch, config, deps} = resolveArgs(args)
   const {shouldComponentUpdate, suppressUpdateIfEqual, ...restConfig} = config
 
-  const scopeRef = useRef()
+  const scopeRef: {
+    current: IScope
+  } = useRef()
   if (!scopeRef.current) {
     scopeRef.current = new Scope({
       ...restConfig,
@@ -22,9 +24,11 @@ export default (...args: any[]): useResult => {
   }
 
   const [, setState] = useState(0)
-  const updater = useCallback(() => setState(Date.now()), [])
+  const updater: {(): void} = useCallback(() => setState(Date.now()), [])
 
-  const subscriberRef = useRef()
+  const subscriberRef: {
+    current: IComponentSubscriber
+  } = useRef()
   if (!subscriberRef.current) {
     subscriberRef.current = new ComponentSubscriber({
       updater,
@@ -37,7 +41,9 @@ export default (...args: any[]): useResult => {
     })
   }
 
-  const resultRef = useRef()
+  const resultRef: {
+    current: useResult
+  } = useRef()
   if (!useRef.current) {
     resultRef.current = createHiddenProperty({}, STATE, subscriberRef.current)
     Object.defineProperties(resultRef.current, {

@@ -89,7 +89,7 @@ export default class ComponentSubscriber implements IComponentSubscriber {
   }
 
   // If not has fetch, which means deps is not resolved, then return undefined.
-  getData() {
+  getData(): any {
     if (!this.fetcher) {
       if (this.deps.length) this.attemptToFetch()
       else throw new Error("Maybe you are using async method to get key")
@@ -99,7 +99,7 @@ export default class ComponentSubscriber implements IComponentSubscriber {
     return this.fetcher.getData(this) // eslint-disable-line
   }
 
-  getError() {
+  getError(): Error | null {
     if (this.fetcher && this.fetcher.hasError) {
       if (this.scope.assertContinueRetry()) {
         return null
@@ -125,14 +125,14 @@ export default class ComponentSubscriber implements IComponentSubscriber {
     this.scope.poolingStrategy.destroy()
   }
 
-  teardown() {
+  teardown(): void {
     if (typeof this.remover === "function") {
       this.remover()
     }
     this.remover = null
   }
 
-  handleUpdate(newData: object | null) {
+  handleUpdate(newData: object | null): void {
     if (!this.suppressUpdateIfEqual || !equal(this.dataRef, newData)) {
       this.dataRef = newData
       this.children.forEach(child => {
@@ -146,7 +146,7 @@ export default class ComponentSubscriber implements IComponentSubscriber {
     this.scope.attemptToPooling()
   }
 
-  handleError(err?: Error) {
+  handleError(err?: Error): void {
     if (this.scope.assertContinueRetry()) {
       this.scope.attemptToRetry()
     } else {
@@ -158,7 +158,7 @@ export default class ComponentSubscriber implements IComponentSubscriber {
     }
   }
 
-  attemptToFetch() {
+  attemptToFetch(): void {
     if (!this.fetcher) {
       const key = this.generateKey()
       if (!key) return

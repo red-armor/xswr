@@ -111,6 +111,12 @@ export interface IComponentSubscriber {
   attemptToFetch: () => void
   forceRevalidate: () => void
   addChild: (child: IComponentSubscriber) => void
+
+  getData: () => any
+  getError: () => Error | null
+  getIsValidating: () => boolean
+  getIsPooling: () => boolean
+  clearPooling: () => void
 }
 
 export interface IPromiseSubscriber {
@@ -179,10 +185,10 @@ export enum MODE {
 }
 
 export interface useResult {
-  [USE_XSWR]: IComponentSubscriber
   data: any
   error: Error | null
   isValidating: boolean
   clearPooling: {(): void}
   isPooling: boolean
+  [USE_XSWR]: IComponentSubscriber
 }

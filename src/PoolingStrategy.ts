@@ -16,14 +16,14 @@ export default class PoolingStrategy implements IPoolingStrategy {
     this.belongs = subscriber
   }
 
-  suspense() {
+  suspense(): void {
     if (this.timeoutHandler) {
       clearTimeout(this.timeoutHandler)
       this.timeoutHandler = null
     }
   }
 
-  resumeTick() {
+  resumeTick(): void {
     if (this.interval > 0) {
       this.timeoutHandler = setTimeout(() => {
         if (this.belongs) this.belongs.forceRevalidate()
@@ -31,14 +31,14 @@ export default class PoolingStrategy implements IPoolingStrategy {
     }
   }
 
-  cleanup() {
+  cleanup(): void {
     if (this.timeoutHandler) {
       clearTimeout(this.timeoutHandler)
       this.timeoutHandler = null
     }
   }
 
-  destroy() {
+  destroy(): void {
     this.cleanup()
     this.interval = 0
   }

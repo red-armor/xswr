@@ -9,9 +9,6 @@ import {
 
 import {createHiddenProperty, STATE, isPromiseLike} from "./commons"
 
-// function fetcher() {}
-// interface IFetcher {}
-
 const fetcher = (function(): void {} as any) as {new (): Fetcher}
 const proto = fetcher.prototype
 
