@@ -1,4 +1,4 @@
-import {RESUMABLE_PROMISE} from "./commons"
+import {RESUMABLE_PROMISE, USE_XSWR} from "./commons"
 
 export interface PromiseLike<T> {
   then: (
@@ -91,9 +91,9 @@ export interface scopeConfig {
 
 export interface IComponentSubscriber {
   id: string
-  deps: State[]
+  deps: IComponentSubscriber[]
   updater: () => void
-  remover: () => void | null
+  remover: null | {(): void}
   forceValidate: boolean
   children: IComponentSubscriber[]
   scope: IScope
@@ -106,10 +106,11 @@ export interface IComponentSubscriber {
   suppressUpdateIfEqual: boolean
 
   teardown: () => void
-  handleUpdate: (initialValue: object) => void
+  handleUpdate: (newData: object | null) => void
   handleError: (err: Error) => void
   attemptToFetch: () => void
   forceRevalidate: () => void
+  addChild: (child: IComponentSubscriber) => void
 }
 
 export interface IPromiseSubscriber {
@@ -169,12 +170,19 @@ export interface createFetchOptions {
   fetchArgs: any[]
 }
 
-export interface IResumablePromise {}
-
 export interface State {}
 
 export enum MODE {
   NORMAL = 0,
   POOL = 1,
   RETRY = 2
+}
+
+export interface useResult {
+  [USE_XSWR]: IComponentSubscriber
+  data: any
+  error: Error | null
+  isValidating: boolean
+  clearPooling: {(): void}
+  isPooling: boolean
 }

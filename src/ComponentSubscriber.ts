@@ -1,21 +1,22 @@
+// @ts-ignore
 import equal from "deep-equal"
 import store from "./store"
 import {buildKey} from "./resolveArgs"
 import {USE_XSWR} from "./commons"
 import {
-  State,
   IScope,
   PromiseLike,
   IComponentSubscriber,
-  Fetcher
+  Fetcher,
+  useResult
 } from "./interface"
 
 let count = 0
 export default class ComponentSubscriber implements IComponentSubscriber {
   public id: string
-  public deps: State[]
+  public deps: IComponentSubscriber[]
   public updater: () => void
-  public remover: () => void | null
+  public remover: null | {(): void}
   public forceValidate: boolean
   public children: IComponentSubscriber[]
   public scope: IScope
@@ -36,6 +37,14 @@ export default class ComponentSubscriber implements IComponentSubscriber {
     deps,
     shouldComponentUpdate,
     suppressUpdateIfEqual
+  }: {
+    updater: () => void
+    scope: IScope
+    fetch: <T>() => PromiseLike<T>
+    fetchArgs: any[]
+    deps: useResult[]
+    shouldComponentUpdate: boolean
+    suppressUpdateIfEqual: boolean
   }) {
     this.id = `component_subscriber_${count++}`
     this.deps = []
@@ -48,6 +57,7 @@ export default class ComponentSubscriber implements IComponentSubscriber {
     this.dataRef = null
 
     this.fetch = fetch
+    this.fetcher = null
     this.fetchArgs = fetchArgs
 
     this.shouldComponentUpdate = shouldComponentUpdate
@@ -90,7 +100,7 @@ export default class ComponentSubscriber implements IComponentSubscriber {
   }
 
   getError() {
-    if (this.fetcher.hasError) {
+    if (this.fetcher && this.fetcher.hasError) {
       if (this.scope.assertContinueRetry()) {
         return null
       }
@@ -100,17 +110,18 @@ export default class ComponentSubscriber implements IComponentSubscriber {
     return null
   }
 
-  getIsValidating() {
+  getIsValidating(): boolean {
+    if (!this.fetcher) return false
     const shouldRevalidating =
       this.fetcher.getProp("hasError") && this.scope.assertContinueRetry()
     return this.fetcher.assertValidating() || shouldRevalidating
   }
 
-  getIsPooling() {
+  getIsPooling(): boolean {
     return this.scope.assertPooling()
   }
 
-  clearPooling() {
+  clearPooling(): void {
     this.scope.poolingStrategy.destroy()
   }
 
@@ -121,7 +132,7 @@ export default class ComponentSubscriber implements IComponentSubscriber {
     this.remover = null
   }
 
-  handleUpdate(newData) {
+  handleUpdate(newData: object | null) {
     if (!this.suppressUpdateIfEqual || !equal(this.dataRef, newData)) {
       this.dataRef = newData
       this.children.forEach(child => {
@@ -135,7 +146,7 @@ export default class ComponentSubscriber implements IComponentSubscriber {
     this.scope.attemptToPooling()
   }
 
-  handleError(err) {
+  handleError(err?: Error) {
     if (this.scope.assertContinueRetry()) {
       this.scope.attemptToRetry()
     } else {
@@ -161,20 +172,20 @@ export default class ComponentSubscriber implements IComponentSubscriber {
     this.fetcher.attemptToValidate(this)
   }
 
-  addChild(child) {
+  addChild(child: IComponentSubscriber): void {
     const index = this.children.indexOf(child)
     if (index === -1) {
       this.children.push(child)
     }
   }
 
-  handleDeps(deps) {
+  handleDeps(deps: useResult[]): void {
     deps.forEach(dep => this.addDeps(dep))
   }
 
-  addDeps(dep) {
+  addDeps(dep: useResult): void {
     try {
-      const state = dep[USE_XSWR]
+      const state: IComponentSubscriber = dep[USE_XSWR]
       const index = this.deps.indexOf(state)
       if (index === -1) {
         this.deps.push(state)
@@ -189,6 +200,6 @@ export default class ComponentSubscriber implements IComponentSubscriber {
   }
 
   forceRevalidate() {
-    this.fetcher.forceComponentRevalidate(this)
+    if (this.fetcher) this.fetcher.forceComponentRevalidate(this)
   }
 }

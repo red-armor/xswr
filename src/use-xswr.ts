@@ -1,13 +1,15 @@
+// @ts-ignore
 import {useEffect, useCallback, useState, useRef} from "react"
 import ComponentSubscriber from "./ComponentSubscriber"
 import resolveArgs from "./resolveArgs"
 import Scope from "./Scope"
 import {createHiddenProperty, USE_XSWR} from "./commons"
+import {useResult} from "./interface"
 
 const STATE = USE_XSWR
 
 // last one mayBe deps...
-export default (...args) => {
+export default (...args: any[]): useResult => {
   const {fetchArgs, fetch, config, deps} = resolveArgs(args)
   const {shouldComponentUpdate, suppressUpdateIfEqual, ...restConfig} = config
 
