@@ -1,3 +1,4 @@
+// @ts-ignore
 import equal from "deep-equal"
 import ResumablePromise from "./ResumablePromise"
 

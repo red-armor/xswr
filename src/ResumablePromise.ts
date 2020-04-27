@@ -39,7 +39,7 @@ interface PromiseState {
   chainPromises: []
 }
 
-const ResumablePromise = (function() {
+const ResumablePromise = (function(this: IResumablePromise) {
   const state: PromiseState = {} as any
   createHiddenProperties(state, {
     id: count++,

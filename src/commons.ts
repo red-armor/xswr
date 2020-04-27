@@ -42,5 +42,5 @@ export const toString = Function.call.bind(Object.prototype.toString)
 
 export const generateKey = () => {}
 
-export const isPromiseLike = (fn?: PromiseLike): boolean =>
+export const isPromiseLike = <T>(fn?: PromiseLike<T>): boolean =>
   !!fn && typeof fn === "object" && typeof fn.then === "function"
