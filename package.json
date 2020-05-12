@@ -1,6 +1,6 @@
 {
   "name": "xswr",
-  "version": "0.0.7",
+  "version": "1.0.0",
   "description": "cross platform swr",
   "main": "dist/index.js",
   "module": "dist/xswr.esm.js",
