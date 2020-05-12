@@ -33,7 +33,7 @@ module.exports = {
   resolve: {
     extensions: [".js", ".jsx", ".ts", ".tsx"],
     alias: {
-      xswr: __dirname
+      xswr: `${__dirname}/src`
     }
   },
   devServer: {

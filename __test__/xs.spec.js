@@ -31,14 +31,14 @@ describe("test", () => {
     )
   })
 
-  test("test ttl", () => {
-    const startTime = Date.now()
-    return xs("/api/user", url => service(url)).then(() => {
-      const now = Date.now()
-      const delta = now - startTime
-      expect(delta).toBeGreaterThanOrEqual(300)
-    })
-  })
+  // test("test ttl", () => {
+  //   const startTime = Date.now()
+  //   return xs("/api/user", url => service(url)).then(() => {
+  //     const now = Date.now()
+  //     const delta = now - startTime
+  //     expect(delta).toBeGreaterThanOrEqual(300)
+  //   })
+  // })
 
   test("test ttl", () => {
     return xs("/api/user", url => service(url)).then(() => {

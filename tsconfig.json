@@ -15,5 +15,5 @@
     "module": "esnext",
     "allowJs": true
   },
-  "include": ["src/xswr.ts"]
+  "include": ["src/index.ts"]
 }

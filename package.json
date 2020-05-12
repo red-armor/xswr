@@ -2,7 +2,9 @@
   "name": "xswr",
   "version": "0.0.7",
   "description": "cross platform swr",
-  "main": "index.js",
+  "main": "dist/index.js",
+  "module": "dist/xswr.esm.js",
+  "umd:main": "dist/xswr.umd.production.min.js",
   "scripts": {
     "xs:basic": "DIR=xs/basic EXT=js webpack-dev-server",
     "xs:initialValue": "DIR=xs/initialValue EXT=js webpack-dev-server",
@@ -10,7 +12,8 @@
     "usexs:initialValue": "DIR=usexs/initialValue EXT=js webpack-dev-server",
     "test": "jest",
     "lint": "./node_modules/.bin/eslint ./src/**/*.js",
-    "lint-fix": "./node_modules/.bin/eslint --fix ./src/**/*.js"
+    "lint-fix": "./node_modules/.bin/eslint --fix ./src/**/*.js",
+    "build": "rimraf dist/ && tsdx build --name xswr --format esm,cjs,umd"
   },
   "husky": {
     "hooks": {
@@ -35,7 +38,8 @@
     "README.md",
     "README-zh_CN.md",
     "src/",
-    "index.js"
+    "index.js",
+    "dist/"
   ],
   "author": "youchaoliu@gmail.com",
   "license": "ISC",
@@ -59,8 +63,10 @@
     "jest": "^25.1.0",
     "prettier": "^1.19.1",
     "pretty-quick": "^2.0.1",
+    "rimraf": "^3.0.2",
     "ts-jest": "^25.5.1",
     "ts-loader": "^7.0.1",
+    "tsdx": "^0.13.2",
     "typescript": "^3.8.3",
     "webpack": "^4.42.0",
     "webpack-cli": "^3.3.11",
