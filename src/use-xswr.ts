@@ -1,31 +1,34 @@
+// @ts-ignore
 import {useEffect, useCallback, useState, useRef} from "react"
 import ComponentSubscriber from "./ComponentSubscriber"
 import resolveArgs from "./resolveArgs"
 import Scope from "./Scope"
 import {createHiddenProperty, USE_XSWR} from "./commons"
+import {useResult, IComponentSubscriber, IScope} from "./interface"
 
 const STATE = USE_XSWR
 
 // last one mayBe deps...
-export default (...args) => {
+export default (...args: any[]): useResult => {
   const {fetchArgs, fetch, config, deps} = resolveArgs(args)
-  const {
-    onError,
-    onSuccess,
-    shouldComponentUpdate,
-    suppressUpdateIfEqual,
-    ...restConfig
-  } = config
+  const {shouldComponentUpdate, suppressUpdateIfEqual, ...restConfig} = config
 
-  const scopeRef = useRef()
+  const scopeRef: {
+    current: IScope
+  } = useRef()
   if (!scopeRef.current) {
-    scopeRef.current = new Scope(restConfig)
+    scopeRef.current = new Scope({
+      ...restConfig,
+      cacheKey: ""
+    })
   }
 
   const [, setState] = useState(0)
-  const updater = useCallback(() => setState(Date.now()), [])
+  const updater: {(): void} = useCallback(() => setState(Date.now()), [])
 
-  const subscriberRef = useRef()
+  const subscriberRef: {
+    current: IComponentSubscriber
+  } = useRef()
   if (!subscriberRef.current) {
     subscriberRef.current = new ComponentSubscriber({
       updater,
@@ -33,15 +36,14 @@ export default (...args) => {
       fetchArgs,
       deps,
       scope: scopeRef.current,
-
-      onError,
-      onSuccess,
       shouldComponentUpdate,
       suppressUpdateIfEqual
     })
   }
 
-  const resultRef = useRef()
+  const resultRef: {
+    current: useResult
+  } = useRef()
   if (!useRef.current) {
     resultRef.current = createHiddenProperty({}, STATE, subscriberRef.current)
     Object.defineProperties(resultRef.current, {

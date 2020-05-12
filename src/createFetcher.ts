@@ -1,18 +1,30 @@
+import {
+  fetcherSubscriber,
+  ISubscriber,
+  createFetchOptions,
+  IComponentSubscriber,
+  IPromiseSubscriber,
+  Fetcher
+} from "./interface"
+
 import {createHiddenProperty, STATE, isPromiseLike} from "./commons"
 
-function fetcher() {}
+const fetcher = (function(): void {} as any) as {new (): Fetcher}
 const proto = fetcher.prototype
 
-const findIndex = (subscribers, subscriber) => {
+const findIndex = (
+  subscribers: fetcherSubscriber[],
+  subscriber: ISubscriber
+) => {
   return subscribers.findIndex(({subscriber: o}) => o.id === subscriber.id)
 }
 
-proto.getProp = function(prop) {
+proto.getProp = function(prop: string): any {
   const state = this[STATE]
   return state[prop]
 }
 
-proto.addComponentSubscriber = function(subscriber) {
+proto.addComponentSubscriber = function(subscriber: ISubscriber): void {
   const state = this[STATE]
   const index = findIndex(state.componentSubscribers, subscriber)
   if (index !== -1) return
@@ -27,7 +39,7 @@ proto.addComponentSubscriber = function(subscriber) {
   })
 }
 
-proto.addPromiseSubscriber = function(subscriber) {
+proto.addPromiseSubscriber = function(subscriber: ISubscriber): void {
   const state = this[STATE]
   const index = findIndex(state.promiseSubscribers, subscriber)
   if (index !== -1) return
@@ -42,53 +54,93 @@ proto.addPromiseSubscriber = function(subscriber) {
   })
 }
 
-proto.notifyData = function() {
+proto.notifyData = function(): void {
   const state = this[STATE]
   const {data, promiseSubscribers, componentSubscribers} = state
 
   // Should use slice copy, because `componentSubscribers` is changed after remove.
   // It cause cause the following subscriber not be revoked..
-  componentSubscribers.slice().forEach(({subscriber, remove}) => {
-    subscriber.handleUpdate(data)
-    remove()
-  })
+  componentSubscribers
+    .slice()
+    .forEach(
+      ({
+        subscriber,
+        remove
+      }: {
+        subscriber: IComponentSubscriber
+        remove: () => void
+      }) => {
+        subscriber.handleUpdate(data)
+        remove()
+      }
+    )
 
-  promiseSubscribers.slice().forEach(({subscriber, remove}) => {
-    subscriber.resolve(data)
-    remove()
-  })
+  promiseSubscribers
+    .slice()
+    .forEach(
+      ({
+        subscriber,
+        remove
+      }: {
+        subscriber: IPromiseSubscriber
+        remove: () => void
+      }) => {
+        subscriber.resolve(data)
+        remove()
+      }
+    )
 }
 
-proto.notifyError = function() {
+proto.notifyError = function(): void {
   const state = this[STATE]
   const {error, promiseSubscribers, componentSubscribers} = state
 
   // notify subscriber
-  componentSubscribers.slice().forEach(({subscriber, remove}) => {
-    subscriber.handleError(error)
-    remove()
-  })
+  componentSubscribers
+    .slice()
+    .forEach(
+      ({
+        subscriber,
+        remove
+      }: {
+        subscriber: IComponentSubscriber
+        remove: () => void
+      }) => {
+        subscriber.handleError(error)
+        remove()
+      }
+    )
 
-  promiseSubscribers.slice().forEach(({subscriber, remove}) => {
-    subscriber.reject(error)
-    remove()
-  })
+  promiseSubscribers
+    .slice()
+    .forEach(
+      ({
+        subscriber,
+        remove
+      }: {
+        subscriber: IPromiseSubscriber
+        remove: () => void
+      }) => {
+        subscriber.reject(error)
+        remove()
+      }
+    )
 }
 
-proto.assertValidating = function() {
+proto.assertValidating = function(): boolean {
   const state = this[STATE]
   const {promise, finalized} = state
   return promise && !finalized
 }
 
 // trigger fetcher to run...
-proto.validate = function() {
+proto.validate = function(): void {
   const state = this[STATE]
   const {fetch, fetchArgs} = state
 
   state.finalized = false
   state.promise = fetch.apply(state, fetchArgs).then(
-    data => {
+    (data: any) => {
       state.data = data
       state.lastUpdatedMS = Date.now()
       state.error = null
@@ -96,7 +148,7 @@ proto.validate = function() {
       state.finalized = true
       this.notifyData()
     },
-    err => {
+    (err: Error) => {
       state.error = err
       state.hasError = true
       state.finalized = true
@@ -110,7 +162,7 @@ proto.validate = function() {
  * Do not care about cache is valid or not..Normally, it's used for pooling or
  * retry...
  */
-proto.forceComponentRevalidate = function(subscriber) {
+proto.forceComponentRevalidate = function(subscriber: ISubscriber): void {
   // If there has ongoing request, bind `onFulfilled` and `onReject`
   if (this.assertValidating()) {
     this.addComponentSubscriber(subscriber)
@@ -124,7 +176,7 @@ proto.forceComponentRevalidate = function(subscriber) {
 /**
  * Basically, used by `ComponentSubscriber`. trigger fetch asap
  */
-proto.attemptToValidate = function(subscriber) {
+proto.attemptToValidate = function(subscriber: ISubscriber): void {
   const {
     scope: {cacheStrategy}
   } = subscriber
@@ -136,7 +188,7 @@ proto.attemptToValidate = function(subscriber) {
   }
 }
 
-proto.getData = function(subscriber) {
+proto.getData = function(subscriber: IComponentSubscriber): object | null {
   const {
     scope: {cacheStrategy, initialValue, onInitial, cacheKey}
   } = subscriber
@@ -162,7 +214,7 @@ proto.getData = function(subscriber) {
     try {
       const pendingValue = onInitial(cacheKey)
       if (isPromiseLike(pendingValue)) {
-        pendingValue.then(result => {
+        pendingValue.then((result: any) => {
           state.data = result
           subscriber.handleUpdate(result)
         })
@@ -182,7 +234,7 @@ proto.getData = function(subscriber) {
  * Do not care about cache is valid or not..Normally, it's used for pooling or
  * retry...
  */
-proto.forcePromiseRevalidate = function(subscriber) {
+proto.forcePromiseRevalidate = function(subscriber: IPromiseSubscriber): void {
   // If there has ongoing request, bind `onFulfilled` and `onReject`
   if (this.assertValidating()) {
     this.addPromiseSubscriber(subscriber)
@@ -193,7 +245,7 @@ proto.forcePromiseRevalidate = function(subscriber) {
   }
 }
 
-proto.handlePromise = function(subscriber) {
+proto.handlePromise = function(subscriber: IPromiseSubscriber): void {
   const state = this[STATE]
   const {
     scope: {cacheStrategy, initialValue, onInitial, cacheKey}
@@ -209,7 +261,7 @@ proto.handlePromise = function(subscriber) {
     try {
       const pendingValue = onInitial(cacheKey)
       if (isPromiseLike(pendingValue)) {
-        pendingValue.then(result => subscriber.resolve(result))
+        pendingValue.then((result: any) => subscriber.resolve(result))
       } else {
         subscriber.resolve(pendingValue)
       }
@@ -228,7 +280,8 @@ proto.handlePromise = function(subscriber) {
   }
 }
 
-export default ({key, fetch, fetchArgs}) => {
+export default (options: createFetchOptions): Fetcher => {
+  const {key, fetch, fetchArgs} = options
   const _fetcher = new fetcher()
 
   createHiddenProperty(_fetcher, STATE, {

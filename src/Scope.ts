@@ -1,15 +1,32 @@
+import {
+  ICacheStrategy,
+  IPoolingStrategy,
+  IRetryStrategy,
+  ISubscriber,
+  IScope,
+  PromiseLike,
+  scopeConfig,
+  MODE
+} from "./interface"
+
 import CacheStrategy from "./CacheStrategy"
 import PoolingStrategy from "./PoolingStrategy"
 import RetryStrategy from "./RetryStrategy"
 
-const MODE = {
-  NORMAL: 0,
-  POOL: 1,
-  RETRY: 2
-}
+export default class Scope implements IScope {
+  public cacheStrategy: ICacheStrategy
+  public poolingStrategy: IPoolingStrategy
+  public retryStrategy: IRetryStrategy
+  public usedData: object | null
+  public mode: number
+  public stopIfResultEqual: boolean
+  public belongs: ISubscriber | null
+  public cacheKey: string
+  public initialValue?: null | object
+  public onInitial?: <T>(cacheKey: string) => PromiseLike<T> | any
+  public onPersistance?: (cacheKey: string, newData: any) => void
 
-export default class Scope {
-  constructor(config) {
+  constructor(config: scopeConfig) {
     const {
       forceValidate,
       maxAge,
@@ -57,17 +74,17 @@ export default class Scope {
     this.onPersistance = onPersistance
   }
 
-  bind(subscriber) {
+  bind(subscriber: ISubscriber): void {
     this.belongs = subscriber
     this.poolingStrategy.belongs = subscriber
     this.retryStrategy.belongs = subscriber
   }
 
-  setCacheKey(cacheKey) {
+  setCacheKey(cacheKey: string): void {
     this.cacheKey = cacheKey
   }
 
-  attemptToPooling() {
+  attemptToPooling(): void {
     if (this.poolingStrategy.interval <= 0) return
     // when start pooling, retry strategy should be reset..
     this.retryStrategy.cleanup()
@@ -79,11 +96,11 @@ export default class Scope {
     this.poolingStrategy.resumeTick()
   }
 
-  assertContinueRetry() {
+  assertContinueRetry(): boolean {
     return this.retryStrategy.maxCount > 0
   }
 
-  attemptToRetry() {
+  attemptToRetry(): void {
     if (this.mode === MODE.POOL) {
       this.poolingStrategy.suspense()
     }
@@ -96,11 +113,11 @@ export default class Scope {
     }
   }
 
-  assertPooling() {
+  assertPooling(): boolean {
     return this.mode === MODE.POOL
   }
 
-  cleanup() {
+  cleanup(): void {
     this.poolingStrategy.cleanup()
     this.retryStrategy.cleanup()
   }

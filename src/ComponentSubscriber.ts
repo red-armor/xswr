@@ -1,25 +1,55 @@
+// @ts-ignore
 import equal from "deep-equal"
 import store from "./store"
 import {buildKey} from "./resolveArgs"
 import {USE_XSWR} from "./commons"
+import {
+  IScope,
+  PromiseLike,
+  IComponentSubscriber,
+  Fetcher,
+  useResult
+} from "./interface"
 
 let count = 0
-export default class ComponentSubscriber {
+export default class ComponentSubscriber implements IComponentSubscriber {
+  public id: string
+  public deps: IComponentSubscriber[]
+  public updater: () => void
+  public remover: null | {(): void}
+  public forceValidate: boolean
+  public children: IComponentSubscriber[]
+  public scope: IScope
+  public dataRef: null | object
+
+  public fetch: <T>() => PromiseLike<T>
+  public fetcher: null | Fetcher
+  public fetchArgs: any[]
+
+  public shouldComponentUpdate: boolean
+  public suppressUpdateIfEqual: boolean
+
   constructor({
     updater,
     scope,
     fetch,
     fetchArgs,
     deps,
-    onError,
-    onSuccess,
     shouldComponentUpdate,
     suppressUpdateIfEqual
+  }: {
+    updater: () => void
+    scope: IScope
+    fetch: <T>() => PromiseLike<T>
+    fetchArgs: any[]
+    deps: useResult[]
+    shouldComponentUpdate: boolean
+    suppressUpdateIfEqual: boolean
   }) {
     this.id = `component_subscriber_${count++}`
     this.deps = []
     this.updater = updater
-    this.remover = []
+    this.remover = () => {}
     this.forceValidate = true
     this.children = []
     this.scope = scope
@@ -27,10 +57,9 @@ export default class ComponentSubscriber {
     this.dataRef = null
 
     this.fetch = fetch
+    this.fetcher = null
     this.fetchArgs = fetchArgs
 
-    this.onError = onError
-    this.onSuccess = onSuccess
     this.shouldComponentUpdate = shouldComponentUpdate
     this.suppressUpdateIfEqual = suppressUpdateIfEqual
 
@@ -60,7 +89,7 @@ export default class ComponentSubscriber {
   }
 
   // If not has fetch, which means deps is not resolved, then return undefined.
-  getData() {
+  getData(): any {
     if (!this.fetcher) {
       if (this.deps.length) this.attemptToFetch()
       else throw new Error("Maybe you are using async method to get key")
@@ -70,8 +99,8 @@ export default class ComponentSubscriber {
     return this.fetcher.getData(this) // eslint-disable-line
   }
 
-  getError() {
-    if (this.fetcher.hasError) {
+  getError(): Error | null {
+    if (this.fetcher && this.fetcher.hasError) {
       if (this.scope.assertContinueRetry()) {
         return null
       }
@@ -81,28 +110,29 @@ export default class ComponentSubscriber {
     return null
   }
 
-  getIsValidating() {
+  getIsValidating(): boolean {
+    if (!this.fetcher) return false
     const shouldRevalidating =
       this.fetcher.getProp("hasError") && this.scope.assertContinueRetry()
     return this.fetcher.assertValidating() || shouldRevalidating
   }
 
-  getIsPooling() {
+  getIsPooling(): boolean {
     return this.scope.assertPooling()
   }
 
-  clearPooling() {
+  clearPooling(): void {
     this.scope.poolingStrategy.destroy()
   }
 
-  teardown() {
+  teardown(): void {
     if (typeof this.remover === "function") {
       this.remover()
     }
     this.remover = null
   }
 
-  handleUpdate(newData) {
+  handleUpdate(newData: object | null): void {
     if (!this.suppressUpdateIfEqual || !equal(this.dataRef, newData)) {
       this.dataRef = newData
       this.children.forEach(child => {
@@ -111,16 +141,12 @@ export default class ComponentSubscriber {
       if (this.shouldComponentUpdate) {
         this.updater()
       }
-
-      if (typeof this.onSuccess === "function") {
-        this.onSuccess(newData)
-      }
     }
 
     this.scope.attemptToPooling()
   }
 
-  handleError(err) {
+  handleError(err?: Error): void {
     if (this.scope.assertContinueRetry()) {
       this.scope.attemptToRetry()
     } else {
@@ -128,15 +154,11 @@ export default class ComponentSubscriber {
         this.updater()
       }
 
-      if (typeof this.onError === "function") {
-        this.onError(err)
-      }
-
       this.scope.attemptToPooling()
     }
   }
 
-  attemptToFetch() {
+  attemptToFetch(): void {
     if (!this.fetcher) {
       const key = this.generateKey()
       if (!key) return
@@ -150,20 +172,20 @@ export default class ComponentSubscriber {
     this.fetcher.attemptToValidate(this)
   }
 
-  addChild(child) {
+  addChild(child: IComponentSubscriber): void {
     const index = this.children.indexOf(child)
     if (index === -1) {
       this.children.push(child)
     }
   }
 
-  handleDeps(deps) {
+  handleDeps(deps: useResult[]): void {
     deps.forEach(dep => this.addDeps(dep))
   }
 
-  addDeps(dep) {
+  addDeps(dep: useResult): void {
     try {
-      const state = dep[USE_XSWR]
+      const state: IComponentSubscriber = dep[USE_XSWR]
       const index = this.deps.indexOf(state)
       if (index === -1) {
         this.deps.push(state)
@@ -178,6 +200,6 @@ export default class ComponentSubscriber {
   }
 
   forceRevalidate() {
-    this.fetcher.forceComponentRevalidate(this)
+    if (this.fetcher) this.fetcher.forceComponentRevalidate(this)
   }
 }
