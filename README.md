@@ -29,6 +29,10 @@ With `yarn`
 yarn add xswr
 ```
 
+## How does xswr works
+
+![basic mechanism](./docs/xswr.png)
+
 ## Usage
 
 1. [useXS - React Hooks solution](./docs/useXS.md)
