@@ -1,4 +1,4 @@
-import {xs} from "xswr"
+import {xs} from "../src"
 import service from "./service"
 import store from "../src/store"
 

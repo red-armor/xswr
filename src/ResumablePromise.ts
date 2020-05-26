@@ -115,13 +115,13 @@ proto.then = function _then<T>(
   const chainPromise = new ResumablePromise()
   chainPromise[RESUMABLE_PROMISE].onFulfilled =
     _onFulfilled ||
-    function(result?: T | PromiseLike<T>) {
-      promise.resolve(result)
+    function(result: T | PromiseLike<T>) {
+      chainPromise.resolve(result)
     }
   chainPromise[RESUMABLE_PROMISE].onRejected =
     _onRejected ||
     function(reason?: any) {
-      promise.reject(reason)
+      chainPromise.reject(reason)
     }
   promise[RESUMABLE_PROMISE].chainPromises.push(chainPromise)
 
