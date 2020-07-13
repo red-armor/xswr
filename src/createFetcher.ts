@@ -1,7 +1,7 @@
 import {
-  fetcherSubscriber,
+  FetcherSubscriber,
   ISubscriber,
-  createFetchOptions,
+  CreateFetchOptions,
   IComponentSubscriber,
   IPromiseSubscriber,
   Fetcher
@@ -13,7 +13,7 @@ const fetcher = (function(): void {} as any) as {new (): Fetcher}
 const proto = fetcher.prototype
 
 const findIndex = (
-  subscribers: fetcherSubscriber[],
+  subscribers: FetcherSubscriber[],
   subscriber: ISubscriber
 ) => {
   return subscribers.findIndex(({subscriber: o}) => o.id === subscriber.id)
@@ -280,7 +280,7 @@ proto.handlePromise = function(subscriber: IPromiseSubscriber): void {
   }
 }
 
-export default (options: createFetchOptions): Fetcher => {
+export default (options: CreateFetchOptions): Fetcher => {
   const {key, fetch, fetchArgs} = options
   const _fetcher = new fetcher()
 

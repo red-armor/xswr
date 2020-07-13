@@ -4,12 +4,12 @@ import ComponentSubscriber from "./ComponentSubscriber"
 import resolveArgs from "./resolveArgs"
 import Scope from "./Scope"
 import {createHiddenProperty, USE_XSWR} from "./commons"
-import {useResult, IComponentSubscriber, IScope} from "./interface"
+import {UseResult, IComponentSubscriber, IScope} from "./interface"
 
 const STATE = USE_XSWR
 
 // last one mayBe deps...
-export default (...args: any[]): useResult => {
+export default (...args: any[]): UseResult => {
   const {fetchArgs, fetch, config, deps} = resolveArgs(args)
   const {shouldComponentUpdate, suppressUpdateIfEqual, ...restConfig} = config
 
@@ -42,7 +42,7 @@ export default (...args: any[]): useResult => {
   }
 
   const resultRef: {
-    current: useResult
+    current: UseResult
   } = useRef()
   if (!useRef.current) {
     resultRef.current = createHiddenProperty({}, STATE, subscriberRef.current)

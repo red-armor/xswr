@@ -5,7 +5,7 @@ import {
   ISubscriber,
   IScope,
   PromiseLike,
-  scopeConfig,
+  ScopeConfig,
   MODE
 } from "./interface"
 
@@ -26,7 +26,7 @@ export default class Scope implements IScope {
   public onInitial?: <T>(cacheKey: string) => PromiseLike<T> | any
   public onPersistance?: (cacheKey: string, newData: any) => void
 
-  constructor(config: scopeConfig) {
+  constructor(config: ScopeConfig) {
     const {
       forceValidate,
       maxAge,

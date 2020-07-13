@@ -14,7 +14,7 @@ export interface IResumablePromise {
 }
 
 // https://stackoverflow.com/questions/47471052/type-null-is-not-assignable-to-type-void-null
-export type functionOrNull = {(...args: any[]): void} | null
+export type FunctionOrNull = {(...args: any[]): void} | null
 
 export interface ICacheStrategy {
   maxAge: undefined | number
@@ -72,7 +72,7 @@ export interface IScope {
   cleanup: () => void
 }
 
-export interface scopeConfig {
+export interface ScopeConfig {
   forceValidate: boolean
   maxAge: number
   staleWhileRevalidateMS: number
@@ -122,9 +122,9 @@ export interface IComponentSubscriber {
 export interface IPromiseSubscriber {
   id: string
   scope: IScope
-  onSuccess: functionOrNull
-  onError: functionOrNull
-  remover: functionOrNull
+  onSuccess: FunctionOrNull
+  onError: FunctionOrNull
+  remover: FunctionOrNull
   teardown: () => void
   resolve: (data: any) => void
   reject: (err: Error) => void
@@ -133,7 +133,7 @@ export interface IPromiseSubscriber {
 
 export type ISubscriber = IPromiseSubscriber | IComponentSubscriber
 
-export interface fetcherSubscriber {
+export interface FetcherSubscriber {
   subscriber: ISubscriber
   remove: () => void
 }
@@ -153,12 +153,12 @@ export interface Fetcher {
   lastUpdatedMS: null | number
 
   findIndex: (
-    subscribers: fetcherSubscriber[],
+    subscribers: FetcherSubscriber[],
     subscriber: ISubscriber
   ) => number
   getProp: (prop: string) => any
-  addComponentSubscriber: (subscriber: fetcherSubscriber) => void
-  addPromiseSubscriber: (subscriber: fetcherSubscriber) => void
+  addComponentSubscriber: (subscriber: FetcherSubscriber) => void
+  addPromiseSubscriber: (subscriber: FetcherSubscriber) => void
   notifyData: () => void
   notifyError: () => void
   assertValidating: () => boolean
@@ -170,7 +170,7 @@ export interface Fetcher {
   handlePromise: (subscriber: ISubscriber) => void
 }
 
-export interface createFetchOptions {
+export interface CreateFetchOptions {
   key: string
   fetch: <T>() => PromiseLike<T>
   fetchArgs: any[]
@@ -184,7 +184,7 @@ export enum MODE {
   RETRY = 2
 }
 
-export interface useResult {
+export interface UseResult {
   data: any
   error: Error | null
   isValidating: boolean

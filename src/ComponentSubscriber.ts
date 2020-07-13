@@ -8,7 +8,7 @@ import {
   PromiseLike,
   IComponentSubscriber,
   Fetcher,
-  useResult
+  UseResult
 } from "./interface"
 
 let count = 0
@@ -42,7 +42,7 @@ export default class ComponentSubscriber implements IComponentSubscriber {
     scope: IScope
     fetch: <T>() => PromiseLike<T>
     fetchArgs: any[]
-    deps: useResult[]
+    deps: UseResult[]
     shouldComponentUpdate: boolean
     suppressUpdateIfEqual: boolean
   }) {
@@ -179,11 +179,11 @@ export default class ComponentSubscriber implements IComponentSubscriber {
     }
   }
 
-  handleDeps(deps: useResult[]): void {
+  handleDeps(deps: UseResult[]): void {
     deps.forEach(dep => this.addDeps(dep))
   }
 
-  addDeps(dep: useResult): void {
+  addDeps(dep: UseResult): void {
     try {
       const state: IComponentSubscriber = dep[USE_XSWR]
       const index = this.deps.indexOf(state)

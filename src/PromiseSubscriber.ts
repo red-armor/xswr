@@ -7,7 +7,7 @@ import {
   IScope,
   IPromiseSubscriber,
   IResumablePromise,
-  functionOrNull
+  FunctionOrNull
 } from "./interface"
 
 let count = 0
@@ -20,9 +20,9 @@ export default class PromiseSubscriber implements IPromiseSubscriber {
   public promise: IResumablePromise
   public cacheKey: string
   public dataRef: null | object
-  public remover: functionOrNull
-  public onSuccess: functionOrNull
-  public onError: functionOrNull
+  public remover: FunctionOrNull
+  public onSuccess: FunctionOrNull
+  public onError: FunctionOrNull
 
   constructor({
     fetcher,
